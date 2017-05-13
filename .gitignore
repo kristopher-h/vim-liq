@@ -1,0 +1,7 @@
+*.pyc
+__pycache__
+plugin/log/*.log.*
+plugin/log/*.log
+plugin/vimlsp_servers
+*.swp
+*.cache

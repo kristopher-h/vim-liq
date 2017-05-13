@@ -1,0 +1,4 @@
+# Developement requirements
+pytest
+pycodestyle
+pydocstyle
