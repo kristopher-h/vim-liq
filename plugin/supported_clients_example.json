@@ -1,7 +1,0 @@
-{
-    "python": {
-        "start_cmd": "pyls",
-        "log_arg": "--log-file",
-        "transport": "STDIO"
-    }
-}

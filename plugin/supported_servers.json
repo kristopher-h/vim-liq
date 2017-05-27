@@ -1,7 +1,0 @@
-{
-    "python": {
-        "start_cmd": "/Users/kristopher/Programming/vim-lsp/plugin/vimlsp_servers/python_lsp_server/bin/pyls",
-        "log_arg": "--log-file",
-        "transport": "STDIO"
-    }
-}

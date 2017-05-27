@@ -43,7 +43,7 @@ handler.setFormatter(formatter)
 log.addHandler(handler)
 
 supported_clients = {}
-with open(os.path.join(os.path.dirname(__file__), "supported_clients.json"), "r") as indata:
+with open(os.path.join(os.path.dirname(__file__), "supported_servers.json"), "r") as indata:
     supported_clients = json.load(indata)
 
 LSP = vimlsp.client.VimLspClient(supported_clients)
