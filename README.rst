@@ -22,11 +22,11 @@ Credits
 Credits go to the following projects, without which it would have been much harder to create
 this.
 
-jedi-vim (https://github.com/davidhalter/jedi-vim/)
-python-language-server (https://github.com/palantir/python-language-server)
-language-server-protocol (https://github.com/Microsoft/language-server-protocol/)
-LanguageClient-neovim (https://github.com/autozimu/LanguageClient-neovim)
-vim-plugin-starter-kit (https://github.com/JarrodCTaylor/vim-plugin-starter-kit)
+* jedi-vim (https://github.com/davidhalter/jedi-vim/)
+* python-language-server (https://github.com/palantir/python-language-server)
+* language-server-protocol (https://github.com/Microsoft/language-server-protocol/)
+* LanguageClient-neovim (https://github.com/autozimu/LanguageClient-neovim)
+* vim-plugin-starter-kit (https://github.com/JarrodCTaylor/vim-plugin-starter-kit)
 
 Requirements
 ------------
