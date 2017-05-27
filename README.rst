@@ -32,10 +32,12 @@ Requirements
 ------------
 
 * Vim with support for:
-  * python (2.7)
-  * autocommands
-  * quickfix
-  * possible more without me knowing it?
+
+  - python (2.7)
+  - autocommands
+  - quickfix
+  - possible more without me knowing it?
+    
 * python > 2.7 (running/installing python-language-server)
 * pip (for installing python-language-server)
 
