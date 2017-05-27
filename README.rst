@@ -32,10 +32,10 @@ Requirements
 ------------
 
 * Vim with support for:
-  - python (2.7)
-  - autocommands
-  - quickfix
-  - possible more without me knowing it?
+  * python (2.7)
+  * autocommands
+  * quickfix
+  * possible more without me knowing it?
 * python > 2.7 (running/installing python-language-server)
 * pip (for installing python-language-server)
 
@@ -43,36 +43,6 @@ Installation
 ------------
 
 TBD
-At some point the instruction below should work, but for now it is completly untested and is more
-kept as a reminder of how it should be.
-
-LSP client
-~~~~~~~~~~
-
-First one must download the plugin. This can be done by the normal means:
-
-* [Pathogen](https://github.com/tpope/vim-pathogen)
-  - `git clone https://github.com/kristopher-h/vim-lsp ~/.vim/bundle/vim-lsp`
-* [Vundle](https://github.com/gmarik/vundle)
-  - Add `Bundle 'https://github.com/kristopher-h/vim-lsp'` to .vimrc
-  - Run `:BundleInstall`
-* [NeoBundle](https://github.com/Shougo/neobundle.vim)
-  - Add `NeoBundle 'https://github.com/kristopher-h/vim-lsp'` to .vimrc
-  - Run `:NeoBundleInstall`
-* [vim-plug](https://github.com/junegunn/vim-plug)
-  - Add `Plug 'https://github.com/kristopher-h/vim-lsp'` to .vimrc
-  - Run `:PlugInstall`
-
-LSP servers
-~~~~~~~~~~~
-
-Once the plugin is installed one or more language servers must be installed. To install
-all supported language servers the following should do the trick::
-
-    cd ~/.vim/bundle/vim-lsp
-    plugin/install_lsp_server.py
-
-Currently only python language server is supported.
 
 License
 -------
