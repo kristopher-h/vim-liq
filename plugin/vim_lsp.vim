@@ -21,6 +21,7 @@ endif
 if exists("g:loaded_vim_lsp") || &cp
     finish
 endif
+
 " --------------------------------
 "  Settings
 " --------------------------------
@@ -120,46 +121,108 @@ python << endOfPython
 LSP.display_sign_help()
 endOfPython
 endfunction
-" --------------------------------
-"  Omnifunc
-" --------------------------------
+
+
+function! LspFileType()
+if LangSupport()
+    setlocal completeopt=longest,menuone,preview
+    setlocal omnifunc=LspOmniFunc
+
+    call RegisterCommand()
+    call RegisterAutoCmd()
+    call RegisterKeyMap()
+    call TdDidOpen()
+end
+endfunction
+
+
+function! RegisterAutoCmd()
+    augroup vim_lsp
+        au BufUnload <buffer> call TdDidClose()
+        au InsertLeave <buffer> call LspInsertLeave()
+        au BufWritePost,FileWritePost <buffer> call LspBufWritePost()
+        au VimLeavePre <buffer> call LspClose()
+        au CursorHold <buffer> call LspCursorHold()
+        au CursorMoved,CursorMovedI <buffer> call LspCursorMoved()
+        " close preview window if visible
+        au InsertLeave <buffer> if pumvisible() == 0|pclose|endif
+    augroup END
+endfunction
+
+
+function! LangSupport()
+python << endOfPython
+import vim
+vim.command("let langsupport = '{0}'".format(LSP.lang_supported()))
+endOfPython
+    if langsupport == "True"
+        return 1
+    end
+    return 0
+endfunction
+
 function! LspOmniFunc(findstart, base)
 python << endOfPython
 LSP.td_completion()
 endOfPython
 endfunction
 
-" --------------------------------
-"  Expose our commands to the user
-" --------------------------------
-command! LspReferences call TdReferences()
-command! LspDefinition call TdDefinition()
-command! LspSymbols call TdSymbols()
-command! LspDiagnostics call TdDiagnostics()
 
 " --------------------------------
 "  Register envents
 " --------------------------------
-augroup vim_lsp
-    au BufNewFile,BufRead * call TdDidOpen()
-    au BufDelete * call TdDidClose()
-    au InsertLeave * call LspInsertLeave()
-    au BufWritePost,FileWritePost * call LspBufWritePost()
-    au VimLeavePre * call LspClose()
-    au CursorHold * call LspCursorHold()
-    au CursorMoved,CursorMovedI * call LspCursorMoved()
-    " close preview window if visible
-    au InsertLeave * if pumvisible() == 0|pclose|endif
-augroup END
+au FileType * call LspFileType()
+
+" --------------------------------
+"  Expose our commands to the user
+" --------------------------------
+function! RegisterCommand()
+    command! LspReferences call TdReferences()
+    command! LspDefinition call TdDefinition()
+    command! LspSymbols call TdSymbols()
+    command! LspDiagnostics call TdDiagnostics()
+endfunction
+
 
 " --------------------------------
 "  Key mappings
 " --------------------------------
-function! OmniComplete()
-    if !empty(&omnifunc)
-        return ".\<C-X>\<C-O>"
+function! LspIsComment()
+    let highlight = synIDattr(synIDtrans(synID(line("."), col("."), 0)), "name")
+    let syntaxtype = join(map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")'))
+    echom "highlight: " . highlight
+    echom "syntaxtype: " . syntaxtype
+    if highlight =~ 'Comment\|Constant\|PreProc'
+        return 1
+    elseif syntaxtype =~ 'Quote\|String'
+        return 1
     else
-        return "."
+        return 0
     endif
 endfunction
-inoremap <expr> . OmniComplete()
+
+function! LspOmni(noselect)
+    if pumvisible()
+        return "\<C-n>"
+    else
+        return "\<C-x>\<C-o>\<C-r>=LspOmniOpened(" . a:noselect . ")\<CR>"
+    endif
+endfunction
+
+
+function! LspOmniOpened(noselect)
+    if !a:noselect && stridx(&completeopt, 'longest') > -1
+        return "\<C-n>"
+    endif
+    return ""
+endfunction
+
+function! RegisterKeyMap()
+    inoremap <expr> <buffer> . LspIsComment() ? "." : "." . LspOmni(1)
+    imap <buffer> <Nul> <C-Space>
+    " smap <buffer> <Nul> <C-Space>
+    inoremap <silent> <buffer> <C-Space> <C-R>=LspOmni(0)<CR>
+    " inoremap <expr> <buffer> <C-Space> <C-R>=LspOmni(0)<CR>
+    nnoremap <silent> <buffer> <leader>d :call TdDefinition()<CR>
+    nnoremap <silent> <buffer> <leader>f :call TdReferences()<CR>
+endfunction

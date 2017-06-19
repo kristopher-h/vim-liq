@@ -29,7 +29,6 @@ import vim
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
-
 # Vim commands
 def current_file():
     return vim.current.buffer.name
@@ -132,7 +131,6 @@ def omni_findstart():
     Call vim legacy stuff for this.
     """
     if vim.eval("a:findstart") == "1":
-        log.debug("findstart")
         vim.command("return syntaxcomplete#Complete(1, '')")
         return True
     return False
@@ -204,27 +202,12 @@ def display_preview(text):
     vim.eval("win_gotoid({})".format(prev_window))
 
 
-def enable_omnifunc():
-    vim.command("setlocal completeopt=longest,menuone,preview")
-    vim.command("setlocal omnifunc=LspOmniFunc")
-
-
 def log_to_file():
     return vim.eval("g:vim_lsp_log_to_file") == "1"
 
 
 def clear_signs(filename):
     vim.command("sign unplace * file={}".format(filename))
-
-
-# Decorators for VimLspClient
-def _language_supported(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        ft = filetype()
-        if ft in self._supported_clients:
-            return func(self, *args, **kwargs)
-    return wrapper
 
 
 def _handle_lsp_error(func):
@@ -263,7 +246,12 @@ class VimLspClient():
         self._sign_id = 1
         self.diagnostics = {}
 
-    @_language_supported
+    def lang_supported(self):
+        ft = filetype()
+        if ft in self._supported_clients:
+            return True
+        return False
+
     def shutdown(self):
         lsp = self._client()
         lsp.shutdown()
@@ -358,31 +346,24 @@ class VimLspClient():
             diags = self.diagnostics[file_]
             disp_qf_from_diag(file_, diags)
 
-    @_language_supported
     def td_did_open(self):
-        # override omnifunc if we have support
-        enable_omnifunc()
-
         lsp = self._client()
         language = filetype()
         self.td_version += 1
         lsp.td_did_open(current_file(), language, self.td_version, current_source())
 
-    @_language_supported
     def td_did_change(self):
         self.clear_signs()
         lsp = self._client()
         self.td_version += 1
         lsp.td_did_change(current_file(), self.td_version, current_source())
 
-    @_language_supported
     def td_did_save(self):
         self.clear_signs()
         lsp = self._client()
         lsp.td_did_save(current_file())
         self.process_diagnostics()
 
-    @_language_supported
     def td_did_close(self):
         # Not using current file here since it might be the wrong name
         # when autocmd BufDelete is triggered.
@@ -395,7 +376,6 @@ class VimLspClient():
             lsp = self._client()
             lsp.td_did_close(current_file())
 
-    @_language_supported
     @_handle_lsp_error
     def td_definition(self):
         lsp = self._client()
@@ -410,7 +390,6 @@ class VimLspClient():
             # multiple matches
             display_quickfixlist(definitions)
 
-    @_language_supported
     @_handle_lsp_error
     def td_references(self):
         lsp = self._client()
@@ -425,7 +404,6 @@ class VimLspClient():
             # multiple matches
             display_quickfixlist(references)
 
-    @_language_supported
     @_handle_lsp_error
     def td_symbols(self):
         lsp = self._client()
@@ -435,7 +413,6 @@ class VimLspClient():
         # TODO: Improve symbol list to not only show locations
         display_quickfixlist(symbols)
 
-    @_language_supported
     @_handle_lsp_error
     def td_completion(self):
         if omni_findstart():
@@ -451,7 +428,6 @@ class VimLspClient():
         # End of though love
         display_completions(completions)
 
-    @_language_supported
     def stop(self):
         """Stop vim_lsp_client server."""
         lsp = self._client()
