@@ -1,7 +1,7 @@
-vim-lsp
+vim-liq
 =======
 
-vim-lsp is a vim client for the language server protocol.
+vim-liq is a vim client for the language server protocol.
 
 Development Status
 ------------------
@@ -36,7 +36,7 @@ LSP client
 First one must download the plugin. This can be done by the normal means, e.g. by using pathogen:
 
 * [Pathogen](https://github.com/tpope/vim-pathogen)
-  - `git clone https://github.com/kristopher-h/vim-lsp ~/.vim/bundle/vim-lsp`
+  - `git clone https://github.com/kristopher-h/vim-liq ~/.vim/bundle/vim-liq`
 
 LSP servers
 ~~~~~~~~~~~
@@ -44,8 +44,8 @@ LSP servers
 Once the plugin is installed one or more language servers must be installed. To install
 all supported language servers the following should do the trick::
 
-    cd ~/.vim/bundle/vim-lsp
-    plugin/install_lsp_server.py
+    cd ~/.vim/bundle/vim-liq/plugin
+    python install_lsp_server.py
 
 Currently only python language server is supported.
 

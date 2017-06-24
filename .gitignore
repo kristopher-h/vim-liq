@@ -3,5 +3,6 @@ __pycache__
 plugin/log/*.log.*
 plugin/log/*.log
 plugin/vimlsp_servers
+plugin/supported_servers.json
 *.swp
 *.cache

@@ -1,19 +1,19 @@
 # Copyright 2017 Kristopher Heijari
 #
-# This file is part of vim-lsp.
+# This file is part of vim-liq.
 #
-# vim-lsp is free software: you can redistribute it and/or modify
+# vim-liq is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# vim-lsp is distributed in the hope that it will be useful,
+# vim-liq is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with vim-lsp.  If not, see <http://www.gnu.org/licenses/>.
+# along with vim-liq.  If not, see <http://www.gnu.org/licenses/>.
 """Lsp client lib."""
 
 # TODO: Fix the return types of all functions or change approach to autogenerate the protocol.
@@ -21,19 +21,19 @@
 #       would probably make it a bit more combersome for the "calling" code...
 
 import collections
-import json
 import logging
 import os
-import sys
+
 try:
     import Queue as queue
-except:
+except ImportError:
     import queue  # py3
 
 from . import jsonrpc
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
+
 
 class LspError(Exception):
     """Error thrown if server replies with an error."""
@@ -49,7 +49,7 @@ class LspClient(object):
     https://github.com/Microsoft/language-server-protocol/blob/master/versions/protocol-2-x.md
 
     """
-    def __init__(self, start_cmd, rpc_class=jsonrpc.JsonRpcStdInOut, timeout=2):
+    def __init__(self, start_cmd, rpc_class=jsonrpc.JsonRpcStdInOut, timeout=10):
         """Create an LspClient.
         Args:
             json_rpc (JsonRpcBase): Class used for reading and writing to remote lsp server.
