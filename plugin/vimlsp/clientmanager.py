@@ -33,7 +33,7 @@ log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
 
-def _handle_lsp_error(func):
+def handle_error(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
@@ -41,8 +41,8 @@ def _handle_lsp_error(func):
         except pylspc.client.LspError as exc:
             log.debug("Got error from LSP server. message=%s, code=%s, data=%s",
                       exc, exc.code, exc.data)
-        except client.VimLspError as exc:
-            log.debug("Got error from vim-self._client. message=%s", exc)
+        except Exception:
+            log.exception()
 
     return wrapper
 
@@ -100,5 +100,5 @@ class ClientManager(object):
         except KeyError:
             raise AttributeError("filetype: {}, name: {}".format(filetype, name))
 
-        return getattr(client_, name)
-
+        func = getattr(client_, name)
+        return handle_error(func)
