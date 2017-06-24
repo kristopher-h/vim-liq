@@ -119,12 +119,16 @@ endfunction
 function! LspCursorMoved()
 python << endOfPython
 LSP.display_sign_help()
+LSP.process_diagnostics()
 endOfPython
 endfunction
 
 
 function! LspFileType()
 if LangSupport()
+python << endOfPython
+LSP.add_client()
+endOfPython
     setlocal completeopt=longest,menuone,preview
     setlocal omnifunc=LspOmniFunc
 
@@ -190,8 +194,6 @@ endfunction
 function! LspIsComment()
     let highlight = synIDattr(synIDtrans(synID(line("."), col("."), 0)), "name")
     let syntaxtype = join(map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")'))
-    echom "highlight: " . highlight
-    echom "syntaxtype: " . syntaxtype
     if highlight =~ 'Comment\|Constant\|PreProc'
         return 1
     elseif syntaxtype =~ 'Quote\|String'
