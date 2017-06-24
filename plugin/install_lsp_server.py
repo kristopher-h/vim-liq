@@ -21,7 +21,7 @@ import logging
 import os
 import sys
 
-import vimlsp.install.python_lsp
+import vimliq.install.python_lsp
 
 log = logging.getLogger()
 log.setLevel(logging.INFO)
@@ -31,7 +31,7 @@ handler.setFormatter(formatter)
 log.addHandler(handler)
 
 INSTALL_FUNCS = (
-    vimlsp.install.python_lsp.install,
+    vimliq.install.python_lsp.install,
 )
 
 INSTALL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vimlsp_servers")
@@ -68,7 +68,7 @@ def main():
             serv_info = install(INSTALL_DIR)
             servers.update(serv_info)
 
-        except vimlsp.install.LspInstallError as exc:
+        except vimliq.install.LspInstallError as exc:
             log.info("%s.%s failed with message: %s",
                      install.__module__, install.__name__, exc)
 

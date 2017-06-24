@@ -21,7 +21,7 @@ import os
 
 import vim
 
-import vimlsp.clientmanager
+import vimliq.clientmanager
 
 # Setup logging
 log = logging.getLogger()
@@ -46,4 +46,4 @@ supported_clients = {}
 with open(os.path.join(os.path.dirname(__file__), "supported_servers.json"), "r") as indata:
     supported_clients = json.load(indata)
 
-LSP = vimlsp.clientmanager.ClientManager(supported_clients)
+LSP = vimliq.clientmanager.ClientManager(supported_clients)
