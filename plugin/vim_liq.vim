@@ -204,7 +204,7 @@ function! LspIsComment()
 endfunction
 
 function! LspOmni(noselect)
-    if pumvisible()
+    if pumvisible() && !a:noselect
         return "\<C-n>"
     else
         return "\<C-x>\<C-o>\<C-r>=LspOmniOpened(" . a:noselect . ")\<CR>"
@@ -223,8 +223,8 @@ function! RegisterKeyMap()
     inoremap <expr> <buffer> . LspIsComment() ? "." : "." . LspOmni(1)
     imap <buffer> <Nul> <C-Space>
     " smap <buffer> <Nul> <C-Space>
-    inoremap <silent> <buffer> <C-Space> <C-R>=LspOmni(0)<CR>
+    inoremap <buffer> <C-Space> <C-R>=LspOmni(0)<CR>
     " inoremap <expr> <buffer> <C-Space> <C-R>=LspOmni(0)<CR>
-    nnoremap <silent> <buffer> <leader>d :call TdDefinition()<CR>
-    nnoremap <silent> <buffer> <leader>f :call TdReferences()<CR>
+    nnoremap <buffer> <leader>d :call TdDefinition()<CR>
+    nnoremap <buffer> <leader>f :call TdReferences()<CR>
 endfunction

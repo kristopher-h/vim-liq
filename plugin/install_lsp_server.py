@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright 2017 Kristopher Heijari
 #
 # This file is part of vim-liq.
@@ -14,7 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with vim-liq.  If not, see <http://www.gnu.org/licenses/>.
-#!/usr/bin/env python
 import argparse
 import json
 import logging
@@ -34,9 +34,10 @@ INSTALL_FUNCS = (
     vimliq.install.python_lsp.install,
 )
 
-INSTALL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vimlsp_servers")
+PLUGIN_DIR = os.path.dirname(os.path.abspath(__file__))
+INSTALL_DIR = os.path.join(PLUGIN_DIR, "vimlsp_servers")
+SERVER_JSON = os.path.join(PLUGIN_DIR, "supported_servers.json")
 
-SERVER_JSON = "supported_servers.json"
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -62,7 +63,6 @@ def main():
         with open(SERVER_JSON) as f:
             servers = json.load(f)
 
-
     for install in INSTALL_FUNCS:
         try:
             serv_info = install(INSTALL_DIR)
@@ -78,4 +78,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
