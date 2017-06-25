@@ -1,19 +1,21 @@
 vim-liq
 =======
 
-vim-liq is a vim client for the language server protocol.
+vim-liq is a vim client for the Language Server Protocoli(LSP). vim-liq stands for something along the
+lines of vim "Language IQ", "Lingustic Intelligence".
 
 Development Status
 ------------------
 
-This project is in an early alpha state and is may not be suitable for general use.
+This project is in an early alpha state and is may not be suitable for general use. But for those
+willing to tinker a bit it might be worth a try :-).
 
-The following high level features have some level of support:
+The following high level, LSP, features have support:
 
-#. Auto complete
-#. Find references
+#. Completion
+#. References
 #. Diagnostics
-#. Goto definition
+#. Definition
 
 Todo
 ----
@@ -23,12 +25,13 @@ Todo
 #. Add support for more lsp servers
 #. Verify python3 and python2 support
 #. Make sure python exceptions are handled better
+#. Add rename support
 #. And much more
 
 Installation
 ------------
 
-At some point the instruction below should work, for now it is mostly untested.
+The instruction below is fairly untested but should work. It is only tested on osX and Linux.
 
 LSP client
 ~~~~~~~~~~
@@ -44,10 +47,11 @@ LSP servers
 Once the plugin is installed one or more language servers must be installed. To install
 all supported language servers the following should do the trick::
 
-    cd ~/.vim/bundle/vim-liq/plugin
-    python install_lsp_server.py
+    cd ~/.vim/bundle/vim-liq
+    plugin/install_lsp_server.py
 
-Currently only python language server is supported.
+Currently only python language server is "supported", it is however possible to manually edit
+the supported_servers.json file to test with other language servers as well.
 
 Requirements
 ------------

@@ -83,13 +83,16 @@ class ClientManager(object):
                 start_cmd.append(os.path.join(vim.eval("g:vim_lsp_logdir"),
                                               "{}_lsp_server_{}.log".format(ft, pid)))
 
+            log.debug("Starting client, start_cmd: %s, transport: %s", start_cmd, transport)
             l_client = client.VimLspClient(start_cmd, transport)
             l_client.start_server()
+            log.debug("Adding client for %s", ft)
             self.clients[ft] = l_client
 
     def shutdown_all(self):
         """Called when vim closes."""
-        for _, l_client in self.clients.items():
+        for lang, l_client in self.clients.items():
+            log.debug("Shutdown client for language, %s", lang)
             l_client.shutdown()
 
     def __getattr__(self, name):
@@ -102,4 +105,3 @@ class ClientManager(object):
 
         func = getattr(client_, name)
         return handle_error(func)
-        # return getattr(client_, name)

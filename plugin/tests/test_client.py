@@ -2,25 +2,22 @@
 #
 # This file is part of vim-liq.
 #
-# vim-liq is free software: you can redistribute it and/or modify
+# vim-liq.is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# vim-liq is distributed in the hope that it will be useful,
+# vim-liq.is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
 # along with vim-liq.  If not, see <http://www.gnu.org/licenses/>.
-import unittest
-import vim_lsp as sut
+
+"""Test vimliq/client.py."""
+
+# Import everything exposed in our test context to this scope
+from .context import *
 
 
-@unittest.skip("Don't forget to test!")
-class VimLspTests(unittest.TestCase):
-
-    def test_example_fail(self):
-        result = sut.vim_lsp_example()
-        self.assertEqual("Happy Hacking", result)
