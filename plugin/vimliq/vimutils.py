@@ -53,7 +53,15 @@ def vimstr(string):
 
 
 def warning(msg):
-    vim.command("echohl WarningMsg | echo '{}' | echohl None".format(vimstr(msg)))
+    # use -5 to account for some overhead and the added ..
+    max_width = int(vim.eval("&columns")) - 5
+    trunc = (msg[:max_width] + "..") if len(msg) > max_width else msg
+
+    # Disable showcmd which for some reason triggers the "ENTER prompt"
+    old_showcmd = vim.eval("&showcmd")
+    vim.command("set noshowcmd")
+    vim.command("echohl WarningMsg | echo '{}' | echohl None".format(vimstr(trunc.strip())))
+    vim.command("let &showcmd = {}".format(old_showcmd))
 
 
 def clear_quickfix():
@@ -90,4 +98,3 @@ def display_quickfix(qf_content):
     vim.eval(cmd)
     # TODO: To not hard code height of quickfix window
     vim.command("rightbelow copen 5")
-

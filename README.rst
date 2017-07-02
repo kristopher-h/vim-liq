@@ -1,13 +1,13 @@
 vim-liq
 =======
 
-vim-liq is a vim client for the Language Server Protocoli(LSP). vim-liq stands for something along the
-lines of vim "Language IQ", "Lingustic Intelligence".
+vim-liq is a vim client for the Language Server Protocol (LSP). vim-liq stands for something along
+the lines of vim- "Language IQ" or "Lingustic Intelligence".
 
 Development Status
 ------------------
 
-This project is in an early alpha state and is may not be suitable for general use. But for those
+This project is in an early alpha state and may not be suitable for general use. But for those
 willing to tinker a bit it might be worth a try :-).
 
 The following high level, LSP, features have support:
