@@ -21,10 +21,8 @@
 from .context import *
 
 @pytest.fixture
-def v_filetype(monkeypatch):
-    mock_ = mock.Mock(return_value="python")
-    monkeypatch.setattr("vimliq.vimutils.filetype", mock_)
-    return mock_
+def client_manager():
+    return vimliq.clientmanager.ClientManager(PYTHON_CLIENT)
 
 
 @pytest.mark.parametrize("value,expected", [
@@ -43,23 +41,29 @@ PYTHON_CLIENT = {"python": {"start_cmd": "start", "transport": "trans", "log_arg
     ("1", ["start", "-a", mock.ANY]),
     ("0", ["start"])
 ])
-def test_ClientManager_add_client(v_filetype, monkeypatch, vim_mock, log, expected):
+def test_ClientManager_add_client(
+        client_manager, v_filetype, monkeypatch, vim_mock, log, expected):
     vim_mock.eval.return_value = log
     mock_ = mock.MagicMock()
     monkeypatch.setattr("vimliq.client.VimLspClient", mock_)
-    manager = vimliq.clientmanager.ClientManager(PYTHON_CLIENT)
-    assert not manager.clients
-    manager.add_client()
-    assert manager.clients["python"]
+    assert not client_manager.clients
+    client_manager.add_client()
+    assert client_manager.clients["python"]
     mock_.assert_called_once_with(expected, "trans")
     mock_().start_server.assert_called_once_with()
 
 
-def test_ClientManager_shutdown():
+def test_ClientManager_shutdown_all(client_manager):
     client_1 = mock.Mock()
     client_2 = mock.Mock()
-    manager = vimliq.clientmanager.ClientManager(PYTHON_CLIENT)
-    manager.clients = {"client_1": client_1, "client_2": client_2}
-    manager.shutdown_all()
+    client_manager.clients = {"client_1": client_1, "client_2": client_2}
+    client_manager.shutdown_all()
     for client in [client_1, client_2]:
         client.shutdown.assert_called_once_with()
+
+
+def test_ClientManager_getattr(client_manager, v_filetype):
+    client = mock.Mock()
+    client_manager.clients = {"python": client}
+    client_manager.fake_func()
+    client.fake_func.assert_called_once_with()

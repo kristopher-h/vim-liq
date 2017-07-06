@@ -119,13 +119,7 @@ class VimLspClient(object):
         self._client.shutdown()
 
     def start_server(self):
-        """Return the correct client based on filetype.
-
-        Create and start if not already done.
-
-        Returns:
-            LspClient:
-        """
+        """Start the LSP client and the server."""
         if self._transport == "STDIO":
             rpc_class = pylspc.jsonrpc.JsonRpcStdInOut
         else:
