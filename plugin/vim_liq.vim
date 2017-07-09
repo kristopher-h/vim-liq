@@ -200,19 +200,29 @@ command! LspLog call PrintLog()
 "  Key mappings
 " --------------------------------
 function! LspIsComment()
-    let highlight = synIDattr(synIDtrans(synID(line("."), col("."), 0)), "name")
-    let syntaxtype = join(map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")'))
+    let m_col = col(".")
+    let end_col = col("$")
+    " If we are at end of line in insert mode we are out of 'scope'
+    " If we are on the first col we are not
+    if m_col >= end_col && m_col > 1
+        let m_col = m_col - 1
+    endif
+    let highlight = synIDattr(synIDtrans(synID(line("."), m_col, 0)), "name")
+    let syntaxtype = join(map(synstack(line('.'), m_col), 'synIDattr(v:val, "name")'))
     if highlight =~ 'Comment\|Constant\|PreProc'
         return 1
-    elseif syntaxtype =~ 'Quote\|String'
+    elseif syntaxtype =~ 'Quote\|String\|Comment'
         return 1
     else
         return 0
     endif
 endfunction
 
+
 function! LspOmni(noselect)
-    if pumvisible() && !a:noselect
+    if LspIsComment()
+        return ""
+    elseif pumvisible() && !a:noselect
         return "\<C-n>"
     else
         return "\<C-x>\<C-o>\<C-r>=LspOmniOpened(" . a:noselect . ")\<CR>"
@@ -228,11 +238,11 @@ function! LspOmniOpened(noselect)
 endfunction
 
 function! RegisterKeyMap()
-    inoremap <expr> <buffer> . LspIsComment() ? "." : "." . LspOmni(1)
+    inoremap <expr> <buffer> . "." . LspOmni(1)
     imap <buffer> <Nul> <C-Space>
     " smap <buffer> <Nul> <C-Space>
-    inoremap <buffer> <C-Space> <C-R>=LspOmni(0)<CR>
+    inoremap <silent> <buffer> <C-Space> <C-R>=LspOmni(0)<CR>
     " inoremap <expr> <buffer> <C-Space> <C-R>=LspOmni(0)<CR>
-    nnoremap <buffer> <leader>d :call TdDefinition()<CR>
-    nnoremap <buffer> <leader>f :call TdReferences()<CR>
+    nnoremap <silent> <buffer> <leader>d :call TdDefinition()<CR>
+    nnoremap <silent> <buffer> <leader>f :call TdReferences()<CR>
 endfunction
