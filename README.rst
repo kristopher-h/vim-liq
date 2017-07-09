@@ -53,6 +53,27 @@ all supported language servers the following should do the trick::
 Currently only python language server is "supported", it is however possible to manually edit
 the supported_servers.json file to test with other language servers as well.
 
+Usage
+-----
+
+The plugin currently automatically map the following keybindings::
+    
+    CTRL-Space => completion
+    . => completion
+    LEADER-d => goto definition
+    LEADER-f => find references
+
+Diagnostics is automatically enabled and uses vim marks. When moving to a line with a diagnostics
+mark the message for that line is displayed in the command-line.
+
+Additional commands::
+
+    LspDiagnostics: Display diagnostics in the quickfix window.
+    LspReferences: Find all references for symbol under cursor. Display result in quickfix window.
+    LspDefinition: Goto defintion. If more than one definition is found display result in quickfix
+        window.
+    LspLog: Display debuglogs from vim-liq.
+
 Requirements
 ------------
 
