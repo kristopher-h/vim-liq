@@ -20,7 +20,7 @@
 import collections
 
 # Import everything exposed in our test context to this scope
-from .context import *
+from context import *
 
 # Always return filetype python
 pytestmark = pytest.mark.usefixtures("v_filetype")

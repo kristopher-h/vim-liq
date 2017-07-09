@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with vim-liq.  If not, see <http://www.gnu.org/licenses/>.
+
+
 class LspInstallError(Exception):
     """Thrown if installation of a lsp server failed."""
-

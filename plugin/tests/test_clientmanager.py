@@ -18,7 +18,7 @@
 """Test vimliq/clientmanager.py."""
 
 # Import everything exposed in our test context to this scope
-from .context import *
+from context import *
 
 @pytest.fixture
 def client_manager():
@@ -61,7 +61,7 @@ def test_ClientManager_shutdown_all(client_manager):
     for client in [client_1, client_2]:
         client.shutdown.assert_called_once_with()
 
-
+@pytest.mark.skipif(sys.version_info < (3,0), reason="Mock fails in python 2.7")
 def test_ClientManager_getattr(client_manager, v_filetype):
     client = mock.Mock()
     client_manager.clients = {"python": client}

@@ -20,11 +20,11 @@ The following high level, LSP, features have support:
 Todo
 ----
 
-#. It is now due time to refactor, refactor, clean-up and refactor
+#. It is now due time to refactor, clean-up and refactor
+#. Add documentation availible via help in vim
 #. Add unit tests (start with all python code)
 #. Add support for more lsp servers
 #. Verify python3 and python2 support
-#. Make sure python exceptions are handled better
 #. Add rename support
 #. And much more
 
@@ -57,7 +57,7 @@ Usage
 -----
 
 The plugin currently automatically map the following keybindings::
-    
+
     CTRL-Space => completion
     . => completion
     LEADER-d => goto definition
@@ -85,7 +85,23 @@ Requirements
   - possibly more without me knowing it?
 
 * python > 2.7 (running/installing python-language-server)
+* pytest, tox, mock for testing
 * pip (for installing python-language-server)
+
+Testing
+-------
+
+Testing of the pythoncode is done with tox. So first make sure you have tox installed. E.g.::
+
+    pip install tox
+
+Once tox is installed simply run tox::
+
+    tox
+
+This will run unittests and linting (currently flake8 is used for linting).
+
+There currently is no tests for the vimscript code.
 
 Credits
 -------

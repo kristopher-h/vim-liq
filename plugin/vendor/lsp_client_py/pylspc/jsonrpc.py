@@ -14,20 +14,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with vim-liq.  If not, see <http://www.gnu.org/licenses/>.
-import copy
 import json
 import logging
 import os
 import subprocess
-import sys
 import threading
 import time
-try:
-    # py3
-    import queue
-except ImportError:
-    # py2
-    import Queue as queue
+
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -43,6 +36,7 @@ class JsonRpcReadTimeout(JsonRpcException):
 
 class ReadThreadDead(JsonRpcException):
     """Raised if the read thread is dead."""
+
 
 class ServerDead(JsonRpcException):
     """Raised if the connection with the server is dead."""
@@ -232,7 +226,6 @@ class JsonRpcHandler(object):
             log.debug("Read from pipe failed. Exception: %s", exc)
             # TODO: Verify that is_alive returns False efter this
             raise ServerDead(exc)
-
 
     def _non_blocking_read(self):
         reader = self._reader

@@ -155,7 +155,7 @@ class LspClient(object):
 
         try:
             # hardcode low timeout since we just want stuff to exit when exiting
-            shut_resp = self._json_rpc.call("shutdown", None, timeout=0.1)
+            self._json_rpc.call("shutdown", None, timeout=0.1)
             self._json_rpc.notify("exit", None)
         except (jsonrpc.JsonRpcReadTimeout) as exc:
             # server is probably already dead. Log and be happy.
@@ -190,7 +190,6 @@ class LspClient(object):
         response = self._json_rpc.call("workspace/symbol", request, timeout=self.timeout)
         LspClient._raise_on_error(response)
         return response
-
 
     # TextDocument requests
     # td is short for TextDocument
@@ -376,7 +375,7 @@ class LspClient(object):
             diagnostics(list): list of diagnostics dicts
         """
         if diagnostics is None:
-            diagnotstics = []
+            diagnostics = []
 
         request = {
             "textDocumet": {"uri": uri},
@@ -450,14 +449,15 @@ class LspClient(object):
         else:
             result = orig_result
         for location in result:
-            locations.append(
-                LspClient.Location(location["uri"],
+            locations.append(LspClient.Location(
+                location["uri"],
                 location["range"]["start"]["line"],
                 location["range"]["end"]["line"],
                 location["range"]["start"]["character"],
                 location["range"]["end"]["character"],
                 response))
         return locations
+
 
 # convinience funcitons
 def create_td_item(uri, language_id, version, text):

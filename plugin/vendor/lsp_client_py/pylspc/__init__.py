@@ -14,7 +14,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with vim-liq.  If not, see <http://www.gnu.org/licenses/>.
-from . import client
-from . import jsonrpc
+
+
+from . import client  # noqa: F401
+from . import jsonrpc  # noqa: F401
 
 _version = "0.0.1"
