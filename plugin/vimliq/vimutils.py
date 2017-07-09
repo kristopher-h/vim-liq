@@ -24,7 +24,7 @@ def filetype():
 def cursor():
     """Return row, col zero based."""
     row, col = vim.current.window.cursor
-    log.debug("cursor: %s, %s", row, col)
+    # log.debug("cursor: %s, %s", row, col)
     # Account for the fact that vim is 1 based for lines while lsp proto is 0 based
     return (row - 1, col)
 

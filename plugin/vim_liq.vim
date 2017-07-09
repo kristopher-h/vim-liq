@@ -27,7 +27,7 @@ endif
 " --------------------------------
 let g:loaded_vim_lsp = 1
 let g:vim_lsp_logdir = expand("<sfile>:h")."/log/"
-let g:vim_lsp_log_to_file = 1
+let g:vim_lsp_log_to_file = 0
 let g:vim_lsp_debug = 1
 
 sign define LspSign text=>>
@@ -41,6 +41,7 @@ python import vim
 python sys.path.append(vim.eval('expand("<sfile>:h")'))
 python sys.path.append(os.path.join(vim.eval('expand("<sfile>:h")'), "vendor/lsp_client_py"))
 python from vim_liq import LSP
+python from vim_liq import LSP_LOG
 
 " --------------------------------
 "  Function(s)
@@ -172,6 +173,12 @@ endOfPython
 endfunction
 
 
+function! PrintLog()
+python << endOfPython
+vim.command("echo '{}'".format(LSP_LOG.get_logs()))
+endOfPython
+endfunction
+
 " --------------------------------
 "  Register envents
 " --------------------------------
@@ -187,6 +194,7 @@ function! RegisterCommand()
     command! LspDiagnostics call TdDiagnostics()
 endfunction
 
+command! LspLog call PrintLog()
 
 " --------------------------------
 "  Key mappings

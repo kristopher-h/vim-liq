@@ -172,7 +172,6 @@ class VimLspClient(object):
             del self.diagnostics[filename]
 
     def process_diagnostics(self):
-        log.debug("enter")
         cur_file = V.current_file()
         for diag in self._client.diagnostics():
             self.diagnostics[diag.uri] = diag.diagnostics
