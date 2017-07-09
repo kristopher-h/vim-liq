@@ -1,0 +1,27 @@
+*vim-liq.txt* A short multi line description of your plugin
+
+===============================================================================
+CONTENTS                                                              *vim-liq*
+
+    1. Intro .................................................. |vim-liq-intro|
+    2. Requirements .................................... |vim-liq-requirements|
+    3. Usage .................................................. |vim-liq-usage|
+    4. Licence .............................................. |vim-liq-licence|
+===============================================================================
+1. Intro                                                        *vim-liq-intro*
+
+Overview of plugin
+
+2. Requirements                                          *vim-liq-requirements*
+
+What additional programs are required to run the plugin
+
+3. Usage                                                        *vim-liq-usage*
+
+How to use the plugin. What functions does it give the user?
+
+4. Licence                                                    *vim-liq-licence*
+
+GPLv3 or later.
+
+vim:ft=help
