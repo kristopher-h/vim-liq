@@ -29,7 +29,7 @@ def current_file():
 
 
 def current_source():
-    return "\n".join(vim.current.buffer)
+    return "{}\n".format("\n".join(vim.current.buffer))
 
 
 def filetype():
