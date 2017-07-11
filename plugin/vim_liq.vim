@@ -205,7 +205,7 @@ function! LspIsComment()
     " If we are at end of line in insert mode we are out of 'scope'
     " If we are on the first col we are not
     if m_col >= end_col && m_col > 1
-        let m_col = m_col - 1
+        let m_col = end_col - 1
     endif
     let highlight = synIDattr(synIDtrans(synID(line("."), m_col, 0)), "name")
     let syntaxtype = join(map(synstack(line('.'), m_col), 'synIDattr(v:val, "name")'))
@@ -238,7 +238,7 @@ function! LspOmniOpened(noselect)
 endfunction
 
 function! RegisterKeyMap()
-    inoremap <expr> <buffer> . "." . LspOmni(1)
+    inoremap <silent> <buffer> . .<C-R>=LspOmni(1)<CR>
     imap <buffer> <Nul> <C-Space>
     " smap <buffer> <Nul> <C-Space>
     inoremap <silent> <buffer> <C-Space> <C-R>=LspOmni(0)<CR>
