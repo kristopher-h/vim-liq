@@ -21,8 +21,8 @@ import logging
 import os
 import re
 
-import pylspc.client
-import pylspc.jsonrpc
+import lsp.client
+import lsp.jsonrpc
 
 from . import vimutils as V
 
@@ -121,11 +121,11 @@ class VimLspClient(object):
     def start_server(self):
         """Start the LSP client and the server."""
         if self._transport == "STDIO":
-            rpc_class = pylspc.jsonrpc.JsonRpcStdInOut
+            rpc_class = lsp.jsonrpc.JsonRpcStdInOut
         else:
             raise VimLspError("Unknown transport protocol: {}".format(self._transport))
 
-        self._client = pylspc.client.LspClient(self._start_cmd, rpc_class=rpc_class)
+        self._client = lsp.client.LspClient(self._start_cmd, rpc_class=rpc_class)
         path = os.getcwd()
         # TODO: What happens if init fails?
         self._client.initialize(root_path=path, root_uri=path)

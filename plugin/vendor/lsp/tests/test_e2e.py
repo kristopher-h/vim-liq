@@ -22,21 +22,21 @@ import time
 
 import pytest
 
-from .context import pylspc
+from .context import lsp
 
 logging.basicConfig(level=logging.DEBUG)
 
 
 @pytest.fixture(scope="module")
 def lsp_pipe():
-    thing = pylspc.jsonrpc.JsonRpcStdInOut(["pyls"])
+    thing = lsp.jsonrpc.JsonRpcStdInOut(["pyls"])
     return thing
 
 
 @pytest.fixture(scope="module")
 def lsp_client():
-    pipe = pylspc.jsonrpc.JsonRpcStdInOut(["pyls"])
-    thing = pylspc.client.LspClient(pipe)
+    pipe = lsp.jsonrpc.JsonRpcStdInOut(["pyls"])
+    thing = lsp.client.LspClient(pipe)
     return thing
 
 

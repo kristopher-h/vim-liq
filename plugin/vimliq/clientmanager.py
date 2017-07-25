@@ -21,8 +21,8 @@ from functools import wraps
 import logging
 import os
 
-import pylspc.client
-import pylspc.jsonrpc
+import lsp.client
+import lsp.jsonrpc
 
 from . import client
 from . import vimutils as V
@@ -38,7 +38,7 @@ def handle_error(func):
     def wrapper(*args, **kwargs):
         try:
             func(*args, **kwargs)
-        except pylspc.client.LspError as exc:
+        except lsp.client.LspError as exc:
             log.debug("Got error from LSP server. message=%s, code=%s, data=%s",
                       exc, exc.code, exc.data)
         except Exception:

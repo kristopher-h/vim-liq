@@ -39,7 +39,7 @@ python import os
 python import sys
 python import vim
 python sys.path.append(vim.eval('expand("<sfile>:h")'))
-python sys.path.append(os.path.join(vim.eval('expand("<sfile>:h")'), "vendor/lsp_client_py"))
+python sys.path.append(os.path.join(vim.eval('expand("<sfile>:h")'), "vendor/lsp"))
 python from vim_liq import LSP
 python from vim_liq import LSP_LOG
 
