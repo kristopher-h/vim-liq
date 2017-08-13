@@ -4,5 +4,8 @@ plugin/log/*.log.*
 plugin/log/*.log
 plugin/vimlsp_servers
 plugin/supported_servers.json
+plugin/tests/.lsp_install_dir
 *.swp
 *.cache
+*.tox
+*.coverage*

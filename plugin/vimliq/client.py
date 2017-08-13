@@ -209,7 +209,7 @@ class VimLspClient(object):
         if filepath:
             log.debug("Closing %s", filepath)
 
-            self._client.td_did_close(V.current_file())
+            self._client.td_did_close(filepath)
 
     def td_definition(self):
         row, col = V.cursor()

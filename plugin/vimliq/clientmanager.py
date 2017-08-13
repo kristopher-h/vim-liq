@@ -103,5 +103,10 @@ class ClientManager(object):
         except KeyError:
             raise AttributeError("filetype: {}, name: {}".format(filetype, name))
 
-        func = getattr(client_, name)
-        return handle_error(func)
+        attr = getattr(client_, name)
+
+        # If function return with wrapper
+        if callable(attr):
+            return handle_error(attr)
+        else:
+            return attr

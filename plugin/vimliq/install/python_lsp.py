@@ -22,14 +22,13 @@ import glob
 import logging
 import os
 import shutil
+import subprocess
 import tempfile
 try:
     from urllib import urlretrieve as http_download
 except ImportError:
     from urllib.request import urlretrieve as http_download
 import zipfile
-
-import pip
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -62,8 +61,8 @@ def install(dest_dir):
             log.debug("Unzipping %s to %s", zip_path, tempdir)
             unzipit.extractall(path=tempdir)
 
-        pip.main(["install", "--prefix", INSTALL_DIR, "--ignore-installed", "--upgrade",
-                  os.path.join(tempdir, UNZIPPED_NAME)])
+        subprocess.check_call(["pip", "install", "--prefix", INSTALL_DIR, "--ignore-installed",
+                               "--upgrade", os.path.join(tempdir, UNZIPPED_NAME)])
 
         # Do the nasty, how can this possibly go wrong :-)
         glob_path = glob.glob(os.path.join(INSTALL_DIR, "lib/python*"))[0]

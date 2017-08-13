@@ -7,7 +7,7 @@ the lines of vim- "Language IQ" or "Lingustic Intelligence".
 Development Status
 ------------------
 
-This project is in an early alpha state and may not be suitable for general use. But for those
+This project is in a beta state and may not be suitable for general use. But for those
 willing to tinker a bit it might be worth a try :-).
 
 The following high level, LSP, features have support:
@@ -20,11 +20,10 @@ The following high level, LSP, features have support:
 Todo
 ----
 
-#. It is now due time to refactor, clean-up and refactor
+#. Clean up, refactor
 #. Add documentation availible via help in vim
-#. Add unit tests (start with all python code)
 #. Add support for more lsp servers
-#. Verify python3 and python2 support
+#. Verify the plugin is working with vim built for python3 as well as 2
 #. Add rename support
 #. And much more
 
@@ -51,7 +50,9 @@ all supported language servers the following should do the trick::
     plugin/install_lsp_server.py
 
 Currently only python language server is "supported", it is however possible to manually edit
-the supported_servers.json file to test with other language servers as well.
+the supported_servers.json file to test with other language servers as well. The file does not
+exist until at least one lsp server has been installed. See plugin/supported_servers_example.json
+for an example of what the contents of the file should look like.
 
 Usage
 -----
@@ -88,18 +89,22 @@ Requirements
 * pytest, tox, mock for testing
 * pip (for installing python-language-server)
 
-Testing
--------
+Testing (for developers)
+------------------------
 
 Testing of the pythoncode is done with tox. So first make sure you have tox installed. E.g.::
 
     pip install tox
 
-Once tox is installed simply run tox::
+Once tox is installed simply run tox from the plugin folder of vim-liq::
 
+    cd ~/.vim/bundle/vim-liq/plugin
     tox
 
-This will run unittests and linting (currently flake8 is used for linting).
+This will run unittests and linting (currently flake8 is used for linting). As a part of testing
+the lsp servers supported will be downloaded/installed locally in plugin/tests/.lsp_install_dir.
+This is however only done the first time the test is run. To force a re-install one must manually
+remove the .lsp_install_dir.
 
 There currently is no tests for the vimscript code.
 

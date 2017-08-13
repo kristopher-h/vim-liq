@@ -24,8 +24,7 @@ import logging
 
 log = logging.getLogger()
 handler = logging.StreamHandler()
-formatter = logging.Formatter(
-        '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+formatter = logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
 handler.setFormatter(formatter)
 log.addHandler(handler)
 log.setLevel(logging.DEBUG)
@@ -34,7 +33,7 @@ import os
 import sys
 test_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(test_dir, '..'))
-sys.path.insert(0, os.path.join(test_dir, '../vendor/lsp_client_py'))
+sys.path.insert(0, os.path.join(test_dir, '../vendor/lsp'))
 
 try:
     import unittest.mock as mock
@@ -60,9 +59,11 @@ def v_filetype(monkeypatch):
     monkeypatch.setattr("vimliq.vimutils.filetype", mock_)
     return mock_
 
+
 class Partial(str):
     def __eq__(self, other):
         return self in other
+
 
 import vimliq.client
 import vimliq.clientmanager
