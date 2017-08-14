@@ -4,11 +4,11 @@ vim-liq
 vim-liq is a vim client for the Language Server Protocol (LSP). vim-liq stands for something along
 the lines of vim- "Language IQ" or "Lingustic Intelligence".
 
-Development Status
-------------------
-
 This project is in a beta state and may not be suitable for general use. But for those
 willing to tinker a bit it might be worth a try :-).
+
+Features
+--------
 
 The following high level, LSP, features have support:
 
@@ -18,42 +18,33 @@ The following high level, LSP, features have support:
 #. Definition
 #. Symbols
 
-Todo
-----
-
-#. Clean up, refactor
-#. Add documentation availible via help in vim
-#. Add support for more lsp servers
-#. Verify the plugin is working with vim built for python3 as well as 2
-#. Add rename support
-#. And much more
-
 Installation
 ------------
 
 The instruction below is only tested on osX and Linux.
 
-LSP client
-~~~~~~~~~~
+Installation is done by downloading an extracting a release bundle, e.g. using pathogen::
 
-First one must download the plugin. This can be done by the normal means, e.g. by using pathogen:
+    cd ~/.vim/bundle
+    wget url_to_release.tgz
+    tar xzf vim-liq.tgz
 
-* [Pathogen](https://github.com/tpope/vim-pathogen)
-  - `git clone https://github.com/kristopher-h/vim-liq ~/.vim/bundle/vim-liq`
+Note: Do not use git clone to clone the repo as that will leave you without any LSP servers. For
+more information see the DEVELOMPENT.rst.
 
-LSP servers
-~~~~~~~~~~~
+Currently LSP servers for the following languages are included:
 
-Once the plugin is installed one or more language servers must be installed. To install
-all supported language servers the following should do the trick::
+#. python
 
-    cd ~/.vim/bundle/vim-liq
-    plugin/install_lsp_server.py
+Upgrading
+~~~~~~~~~
 
-Currently only python language server is "supported", it is however possible to manually edit
-the supported_servers.json file to test with other language servers as well. The file does not
-exist until at least one lsp server has been installed. See plugin/supported_servers_example.json
-for an example of what the contents of the file should look like.
+To upgrade vim-liq simply remove the old vim-liq folder and redo the installation. Example::
+
+    cd ~/.vim/bundle
+    rm -r vim-liq
+
+After that redo the installation.
 
 Usage
 -----
@@ -86,28 +77,7 @@ Requirements
   - quickfix
   - possibly more without me knowing it?
 
-* python > 2.7 (running/installing python-language-server)
-* pytest, tox, mock for testing
-* pip (for installing python-language-server)
-
-Testing (for developers)
-------------------------
-
-Testing of the pythoncode is done with tox. So first make sure you have tox installed. E.g.::
-
-    pip install tox
-
-Once tox is installed simply run tox from the plugin folder of vim-liq::
-
-    cd ~/.vim/bundle/vim-liq/plugin
-    tox
-
-This will run unittests and linting (currently flake8 is used for linting). As a part of testing
-the lsp servers supported will be downloaded/installed locally in plugin/tests/.lsp_install_dir.
-This is however only done the first time the test is run. To force a re-install one must manually
-remove the .lsp_install_dir.
-
-There currently is no tests for the vimscript code.
+* python > 2.7 (for running the python language server)
 
 Credits
 -------
@@ -120,6 +90,7 @@ this.
 * language-server-protocol (https://github.com/Microsoft/language-server-protocol/)
 * LanguageClient-neovim (https://github.com/autozimu/LanguageClient-neovim)
 * vim-plugin-starter-kit (https://github.com/JarrodCTaylor/vim-plugin-starter-kit)
+* Pathogen (https://github.com/tpope/vim-pathogen)
 
 License
 -------

@@ -25,7 +25,8 @@ import vim
 import vimliq.clientmanager
 import vimliq.vimutils as V
 
-server_file = os.path.join(os.path.dirname(__file__), "supported_servers.json")
+plugin_dir = os.path.dirname(__file__)
+server_file = os.path.join(plugin_dir, "servers.json")
 
 
 # Custom memory logger
@@ -56,6 +57,7 @@ class MemHandler(logging.Handler):
 
 
 LSP_LOG = MemHandler(1000)
+LSP = None
 
 
 # Setup logging
@@ -67,8 +69,12 @@ else:
 
 if vim.eval("g:vim_lsp_log_to_file") == "1":
     pid = os.getpid()
+    log_dir = vim.eval("g:vim_lsp_logdir")
+    # Create dir if it does not exist
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
     handler = logging.handlers.RotatingFileHandler(
-        os.path.join(vim.eval("g:vim_lsp_logdir"), "vim_lsp_{}.log".format(pid)),
+        os.path.join(log_dir, "vim_lsp_{}.log".format(pid)),
         maxBytes=500000, backupCount=2)
 else:
     handler = LSP_LOG
@@ -82,9 +88,11 @@ if os.path.isfile(server_file):
     with open(server_file, "r") as indata:
         try:
             supported_clients = json.load(indata)
+            # Make relative paths absolute
+            for _, client in supported_clients.items():
+                client["cmd"] = client["cmd"].replace("{{ PLUGIN_DIR }}", plugin_dir)
+            LSP = vimliq.clientmanager.ClientManager(supported_clients)
         except ValueError:
             log.error("Failed to load json file.")
 else:
     log.info("No supported clients file found. Forgot to install?")
-
-LSP = vimliq.clientmanager.ClientManager(supported_clients)

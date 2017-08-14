@@ -22,26 +22,39 @@ if exists("g:loaded_vim_lsp") || &cp
     finish
 endif
 
+
 " --------------------------------
 "  Settings
 " --------------------------------
-let g:loaded_vim_lsp = 1
 let g:vim_lsp_logdir = expand("<sfile>:h")."/log/"
 let g:vim_lsp_log_to_file = 0
 let g:vim_lsp_debug = 1
-
 sign define LspSign text=>>
 
 " --------------------------------
 " Add our plugin to the path
 " --------------------------------
-python import os
-python import sys
-python import vim
-python sys.path.append(vim.eval('expand("<sfile>:h")'))
-python sys.path.append(os.path.join(vim.eval('expand("<sfile>:h")'), "vendor/lsp"))
-python from vim_liq import LSP
-python from vim_liq import LSP_LOG
+python << endOfPython
+import os
+import sys
+import vim
+sys.path.append(vim.eval('expand("<sfile>:h")'))
+sys.path.append(os.path.join(vim.eval('expand("<sfile>:h")'), "vendor/lsp"))
+from vim_liq import LSP
+lspLoaded = 0
+if LSP:
+    lspLoaded = 1
+vim.command("let lspLoaded={}".format(lspLoaded))
+from vim_liq import LSP_LOG
+endOfPython
+
+if lspLoaded == 0
+    finish
+endif
+
+" If we get here the plugin should have loaded correctly
+let g:loaded_vim_lsp = 1
+
 
 " --------------------------------
 "  Function(s)
@@ -130,14 +143,20 @@ if LangSupport()
 python << endOfPython
 LSP.add_client()
 endOfPython
+endif
+
+" TODO: Handle the support check better
+" check again if there is support since the add_client might have failed
+if LangSupport()
     setlocal completeopt=longest,menuone,preview
-    setlocal omnifunc=LspOmniFunc
+    setloca omnifunc=LspOmniFunc
 
     call RegisterCommand()
     call RegisterAutoCmd()
     call RegisterKeyMap()
     call TdDidOpen()
-end
+endif
+
 endfunction
 
 

@@ -20,6 +20,7 @@
 from functools import wraps
 import logging
 import os
+import shlex
 
 import lsp.client
 import lsp.jsonrpc
@@ -73,22 +74,22 @@ class ClientManager(object):
         ft = V.filetype()
         # Only add if supported and not already added
         if ft in self._supported_clients and ft not in self.clients:
-            start_cmd = [self._supported_clients[ft]["start_cmd"]]
+            start_cmd = shlex.split(self._supported_clients[ft]["cmd"])
             transport = self._supported_clients[ft]["transport"]
-            log_arg = self._supported_clients[ft].get("log_arg", None)
-
-            if vim.eval("g:vim_lsp_log_to_file") == "1" and log_arg:
-                start_cmd.append(log_arg)
-                pid = os.getpid()
-                start_cmd.append(os.path.join(vim.eval("g:vim_lsp_logdir"),
-                                              "{}_lsp_server_{}.log".format(ft, pid)))
 
             log.debug("Starting client, start_cmd: %s, transport: %s", start_cmd, transport)
-            l_client = client.VimLspClient(start_cmd, transport)
-            l_client.start_server()
-            log.debug("Adding client for %s", ft)
-            self.clients[ft] = l_client
+            try:
+                l_client = client.VimLspClient(start_cmd, transport)
+                l_client.start_server()
+                log.debug("Added client for %s", ft)
+                self.clients[ft] = l_client
+            except (lsp.client.LspError, OSError, IOError) as exc:
+                log.error("Failed to add client for %s. Got error %s", ft, exc)
+                # remove client from supported to avoid further calls
+                del self._supported_clients[ft]
 
+
+    @handle_error
     def shutdown_all(self):
         """Called when vim closes."""
         for lang, l_client in self.clients.items():

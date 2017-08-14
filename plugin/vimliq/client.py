@@ -243,6 +243,7 @@ class VimLspClient(object):
         self._display_quickfix_from_location(symbols)
 
     def td_completion(self):
+        log.debug("PAPAPAP")
         if omni_findstart():
             return
         # Make sure server has latest info before trying to complete
