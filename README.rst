@@ -16,6 +16,7 @@ The following high level, LSP, features have support:
 #. References
 #. Diagnostics
 #. Definition
+#. Symbols
 
 Todo
 ----
@@ -30,7 +31,7 @@ Todo
 Installation
 ------------
 
-The instruction below is fairly untested but should work. It is only tested on osX and Linux.
+The instruction below is only tested on osX and Linux.
 
 LSP client
 ~~~~~~~~~~
@@ -57,23 +58,23 @@ for an example of what the contents of the file should look like.
 Usage
 -----
 
-The plugin currently automatically map the following keybindings::
+The plugin currently automatically map the following keybindings:
 
-    CTRL-Space => completion
-    . => completion
-    LEADER-d => goto definition
-    LEADER-f => find references
+| **CTRL-Space** => completion (insert mode)
+| **.** => completion (insert mode)
+| **LEADER-d** => goto definition (normal mode)
+| **LEADER-f** => find references (normal mode)
 
 Diagnostics is automatically enabled and uses vim marks. When moving to a line with a diagnostics
 mark the message for that line is displayed in the command-line.
 
-Additional commands::
+Additional commands:
 
-    LspDiagnostics: Display diagnostics in the quickfix window.
-    LspReferences: Find all references for symbol under cursor. Display result in quickfix window.
-    LspDefinition: Goto defintion. If more than one definition is found display result in quickfix
-        window.
-    LspLog: Display debuglogs from vim-liq.
+| **LspDiagnostics:** Display diagnostics in the quickfix window.
+| **LspReferences:** Find all references for symbol under cursor. Display result in quickfix window.
+| **LspDefinition:** Goto defintion. If more than one definition is found display result in quickfix window.
+| **LspLog:** Display debuglogs from vim-liq.
+| **LspSymbol:** Display symbols in current file.
 
 Requirements
 ------------
