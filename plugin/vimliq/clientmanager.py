@@ -19,7 +19,6 @@
 
 from functools import wraps
 import logging
-import os
 import shlex
 
 import lsp.client
@@ -28,7 +27,6 @@ import lsp.jsonrpc
 from . import client
 from . import vimutils as V
 
-import vim
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -87,7 +85,6 @@ class ClientManager(object):
                 log.error("Failed to add client for %s. Got error %s", ft, exc)
                 # remove client from supported to avoid further calls
                 del self._supported_clients[ft]
-
 
     @handle_error
     def shutdown_all(self):

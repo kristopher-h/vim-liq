@@ -45,6 +45,7 @@ def create_release(development=False):
     # Install LSP servers
     subprocess.run(INSTALL_PYTHON_LSP, check=True)
 
+    tar_name = ""
     if not development:
         # Cleanup all irrelevant files and folders
         cmd = "git clean -fdx --exclude=plugin/servers"

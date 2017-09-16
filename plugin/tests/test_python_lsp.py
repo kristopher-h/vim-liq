@@ -18,10 +18,9 @@
 """This module tests installation and using the python language serverer "e2e"."""
 import shutil
 import tempfile
+import time
 
 from context import *
-
-import vimliq.install.python_lsp
 
 # Hackky workaroudn to access MonkeyPatch class in module scoped fixture
 # Suggestion taken from here: https://github.com/pytest-dev/pytest/issues/363
@@ -38,7 +37,7 @@ VAR_COL = 0
 VAR_REF_LINE = 9
 VAR_REF_COL = 6
 
-install_dir = os.path.join(os.path.dirname(__file__), ".lsp_install_dir")
+pyls_dir = "servers/python/pyls"
 f_type = "python"
 f_path = os.path.join(os.path.dirname(__file__), "python_test.py")
 f_content = ""
@@ -57,15 +56,10 @@ def vim_static():
 # This is the client manager used by all tests
 @pytest.fixture(scope="module")
 def LSP(request, vim_static):
-    if not os.path.exists(install_dir):
-        log.debug("Installing python lsp to %s", install_dir)
-        os.makedirs(install_dir)
-        langserver = vimliq.install.python_lsp.install(install_dir)
+    if not os.path.exists(pyls_dir):
+        pytest.skip("No python LSP server installed. run tools/create_release --dev")
     else:
-        # Just doing like this to avoid re-downloading everytime. If the dict returned from
-        # the python lsp installation this needs to be updated.
-        langserver = {'python': {'start_cmd': install_dir + '/python_lsp_server/bin/pyls',
-                                 'log_arg': '--log-file', 'transport': 'STDIO'}}
+        langserver = {"python": {"cmd": "python " + pyls_dir, "transport": "STDIO"}}
 
     log.debug("langserver: %s", langserver)
     client_manager = vimliq.clientmanager.ClientManager(langserver)
@@ -109,13 +103,6 @@ def test_reference(LSP, vim_mock):
     vim_mock.eval.assert_called_with(Partial('"lnum":{}'.format(VAR_LINE)))
     vim_mock.eval.assert_called_with(Partial('"col":{}'.format(VAR_COL)))
 
-def test_diagnostics(LSP):
-    # For now just check the diagnostics list is updated
-    LSP.process_diagnostics()
-    print(LSP.diagnostics)
-    assert LSP.diagnostics[f_path][0].start_line == 9
-    assert LSP.diagnostics[f_path][0].message == "W391 blank line at end of file"
-
 
 def test_symbols(LSP, vim_mock):
     LSP.td_symbols()
@@ -133,3 +120,14 @@ def test_completion(LSP, vim_mock, monkeypatch):
     print(vim_mock.command.mock_calls)
     # Check that a_variable is returned from the omnifunc function
     vim_mock.command.assert_called_with(Partial('"word":"a_variable"'))
+
+
+def test_diagnostics(LSP, vim_mock):
+    vim_mock.eval.return_value = "fake"
+    # Sleep for a while to allow diagnostics to be published
+    time.sleep(2)
+    # For now just check the diagnostics list is updated
+    LSP.process_diagnostics()
+    print(LSP.diagnostics)
+    assert LSP.diagnostics[f_path][0].start_line == 9
+    assert LSP.diagnostics[f_path][0].message == "W391 blank line at end of file"

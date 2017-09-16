@@ -34,16 +34,14 @@ def test_ClientManager_lang_supported(v_filetype, value, expected):
     assert manager.lang_supported() is expected
 
 
-PYTHON_CLIENT = {"python": {"start_cmd": "start", "transport": "trans", "log_arg": "-a"}}
+PYTHON_CLIENT = {"python": {"cmd": "start", "transport": "trans"}}
 
 
 @pytest.mark.parametrize("log,expected", [
-    ("1", ["start", "-a", mock.ANY]),
     ("0", ["start"])
 ])
 def test_ClientManager_add_client(
         client_manager, v_filetype, monkeypatch, vim_mock, log, expected):
-    vim_mock.eval.return_value = log
     mock_ = mock.MagicMock()
     monkeypatch.setattr("vimliq.client.VimLspClient", mock_)
     assert not client_manager.clients
