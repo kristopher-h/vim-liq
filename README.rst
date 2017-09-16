@@ -26,7 +26,7 @@ The instruction below is only tested on osX and Linux.
 Installation is done by downloading an extracting a release bundle, e.g. using pathogen::
 
     cd ~/.vim/bundle
-    wget url_to_release.tgz
+    wget https://github.com/kristopher-h/vim-liq/releases/download/v0.1.0-beta/vim-liq.tgz
     tar xzf vim-liq.tgz
 
 Note: Do not use git clone to clone the repo as that will leave you without any LSP servers. For
