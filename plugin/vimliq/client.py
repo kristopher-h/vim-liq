@@ -142,6 +142,11 @@ class VimLspClient(object):
 
         return self._sign_id
 
+    @staticmethod
+    def _parse_uri(uri):
+        """Parse uri."""
+        return re.sub("file://", "", uri)
+
     def update_signs(self):
         """Update signs in current buffer."""
         file_ = V.current_file()
@@ -173,7 +178,7 @@ class VimLspClient(object):
     def process_diagnostics(self):
         cur_file = V.current_file()
         for diag in self._client.diagnostics():
-            local_uri = re.sub("file://", "", diag.uri)
+            local_uri = self._parse_uri(diag.uri)
             self.diagnostics[local_uri] = diag.diagnostics
             if local_uri == cur_file:
                 self.update_signs()
@@ -187,11 +192,13 @@ class VimLspClient(object):
     def td_did_open(self):
         language = V.filetype()
         self.td_version += 1
-        self._client.td_did_open("file://" + V.current_file(), language, self.td_version, V.current_source())
+        self._client.td_did_open(
+            "file://" + V.current_file(), language, self.td_version, V.current_source())
 
     def td_did_change(self):
         self.td_version += 1
-        self._client.td_did_change("file://" + V.current_file(), self.td_version, V.current_source())
+        self._client.td_did_change(
+            "file://" + V.current_file(), self.td_version, V.current_source())
 
     def td_did_save(self):
         self._client.td_did_save("file://" + V.current_file())
@@ -216,7 +223,7 @@ class VimLspClient(object):
             V.warning("No definitions found")
         elif len(definitions) == 1:
             def_ = definitions[0]
-            V.jump_to(def_.uri, def_.start_line, def_.start_char)
+            V.jump_to(self._parse_uri(def_.uri), def_.start_line, def_.start_char)
         else:
             # multiple matches
             self._display_quickfix_from_location(definitions)
@@ -228,7 +235,7 @@ class VimLspClient(object):
             V.warning("No references found")
         elif len(references) == 1:
             ref = references[0]
-            V.jump_to(ref.uri, ref.start_line, ref.start_char)
+            V.jump_to(self._parse_uri(ref.uri), ref.start_line, ref.start_char)
         else:
             # multiple matches
             self._display_quickfix_from_location(references)
@@ -263,10 +270,11 @@ class VimLspClient(object):
         """
         qf_content = []
         for loc in locations:
-            qf_line = {"filename": loc.uri,
+            uri = VimLspClient._parse_uri(loc.uri)
+            qf_line = {"filename": uri,
                        "lnum": loc.start_line + 1,
                        "col": loc.start_char,
-                       "text": linecache.getline(loc.uri, loc.start_line + 1)}
+                       "text": linecache.getline(uri, loc.start_line + 1)}
             qf_content.append(qf_line)
         V.display_quickfix(qf_content)
 
