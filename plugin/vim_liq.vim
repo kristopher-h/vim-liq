@@ -14,9 +14,12 @@
 "
 " You should have received a copy of the GNU General Public License
 " along with vim-liq.  If not, see <http://www.gnu.org/licenses/>.
-if !has("python")
+if !has("python") && !has("python3")
+    finish
+elseif !has("timers")
     finish
 endif
+
 
 if exists("g:loaded_vim_lsp") || &cp
     finish
@@ -26,6 +29,12 @@ endif
 " --------------------------------
 "  Settings
 " --------------------------------
+if !exists("g:langIQ_servers")
+    let g:langIQ_servers = {}
+endif
+if !exists("g:langIQ_disablekeymap")
+    let g:langIQ_disablekeymap = 0
+endif
 let g:vim_lsp_logdir = expand("<sfile>:h")."/log/"
 let g:vim_lsp_log_to_file = 0
 let g:vim_lsp_debug = 1
@@ -55,6 +64,8 @@ endif
 " If we get here the plugin should have loaded correctly
 let g:loaded_vim_lsp = 1
 
+" Start timer to process diagnostics
+let timer = timer_start(1000, "LspProcessDiagnostics", {"repeat": -1})
 
 " --------------------------------
 "  Function(s)
@@ -101,27 +112,12 @@ endOfPython
 endfunction
 
 
-function! LspInsertLeave()
-python << endOfPython
-LSP.td_did_change()
-LSP.process_diagnostics()
-endOfPython
-endfunction
-
-
-function! LspCursorHold()
-python << endOfPython
-LSP.process_diagnostics()
-endOfPython
-endfunction
-
-
 function! LspBufWritePost()
 python << endOfPython
-LSP.td_did_change()
 LSP.td_did_save()
 endOfPython
 endfunction
+
 
 function! TdDiagnostics()
 python << endOfPython
@@ -133,8 +129,14 @@ endfunction
 function! LspCursorMoved()
 python << endOfPython
 LSP.display_sign_help()
-LSP.process_diagnostics()
 endOfPython
+endfunction
+
+
+function! LspProcessDiagnostics(id)
+    if LangSupport()
+        py LSP.process_diagnostics()
+    endif
 endfunction
 
 
@@ -153,7 +155,9 @@ if LangSupport()
 
     call RegisterCommand()
     call RegisterAutoCmd()
-    call RegisterKeyMap()
+    if g:langIQ_disablekeymap == 0
+        call RegisterKeyMap()
+    endif
     call TdDidOpen()
 endif
 
@@ -162,11 +166,10 @@ endfunction
 
 function! RegisterAutoCmd()
     augroup vim_lsp
+        au TextChanged,InsertLeave <buffer> py LSP.td_did_change()
         au BufUnload <buffer> call TdDidClose()
-        au InsertLeave <buffer> call LspInsertLeave()
         au BufWritePost,FileWritePost <buffer> call LspBufWritePost()
         au VimLeavePre <buffer> call LspClose()
-        au CursorHold <buffer> call LspCursorHold()
         au CursorMoved,CursorMovedI <buffer> call LspCursorMoved()
         " close preview window if visible
         au InsertLeave <buffer> if pumvisible() == 0|pclose|endif

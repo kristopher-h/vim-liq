@@ -73,7 +73,7 @@ class ClientManager(object):
         # Only add if supported and not already added
         if ft in self._supported_clients and ft not in self.clients:
             start_cmd = shlex.split(self._supported_clients[ft]["cmd"])
-            transport = self._supported_clients[ft]["transport"]
+            transport = self._supported_clients[ft].get("transport", "STDIO")
 
             log.debug("Starting client, start_cmd: %s, transport: %s", start_cmd, transport)
             try:

@@ -29,12 +29,28 @@ Installation is done by downloading an extracting a release bundle, e.g. using p
     wget https://github.com/kristopher-h/vim-liq/releases/download/v0.1.0-beta/vim-liq.tgz
     tar xzf vim-liq.tgz
 
-Note: Do not use git clone to clone the repo as that will leave you without any LSP servers. For
-more information see the DEVELOMPENT.rst.
+.. NOTE::
+    Do not use git clone to clone the repo as that will leave you without any LSP servers. For
+    more information see the DEVELOMPENT.rst.
 
 Currently LSP servers for the following languages are included:
 
 #. python
+
+To add/overwrite language servers add the following in your .vimrc::
+
+    let g:langIQ_servers = {}
+    let g:langIQ_servers["<language>"] = {"cmd": "<start command>"}
+
+Example::
+
+    let g:langIQ_servers = {}
+    let g:langIQ_servers["python"] = {"cmd": "pyls"}
+    let g:langIQ_servers["rust"] = {"cmd": "rustup run beta rls"}
+
+.. NOTE::
+    When adding custom servers expect compatibility issues. This since the only language server 
+    that has been used during development/testing is the bundled one.
 
 Upgrading
 ~~~~~~~~~
@@ -49,12 +65,16 @@ After that redo the installation.
 Usage
 -----
 
-The plugin currently automatically map the following keybindings:
+The plugin by default map the following keybindings:
 
 | **CTRL-Space** => completion (insert mode)
 | **.** => completion (insert mode)
 | **LEADER-d** => goto definition (normal mode)
 | **LEADER-f** => find references (normal mode)
+
+To disbale the default keymap set the following in your .vimrc::
+
+    let g:langIQ_disablekeymap = 1
 
 Diagnostics is automatically enabled and uses vim marks. When moving to a line with a diagnostics
 mark the message for that line is displayed in the command-line.
@@ -69,6 +89,8 @@ Additional commands:
 
 Requirements
 ------------
+
+* Vim 8 or later
 
 * Vim with support for:
 

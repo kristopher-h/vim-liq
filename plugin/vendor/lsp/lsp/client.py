@@ -93,7 +93,7 @@ class LspClient(object):
         return diags
 
     def server_callback(self, msg):
-        """This is a callback function called by tje LspClient read thread.
+        """This is a callback function called by the LspClient read thread.
 
         This function must not take a long time to finish its stuff, since that would block
         the read thread.
@@ -119,7 +119,7 @@ class LspClient(object):
             diagnostic.diagnostics.extend(diagnostic_items)
             self._msg_queue.put(diagnostic)
         # If it is not a valid diagnostic message
-        except KeyError as exc:
+        except (TypeError, AttributeError, KeyError) as exc:
             log.debug(exc)
             log.debug("Invalid diagnostic, dropping msg: %s", msg)
 

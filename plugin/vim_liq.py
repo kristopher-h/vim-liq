@@ -88,6 +88,10 @@ if os.path.isfile(server_file):
     with open(server_file, "r") as indata:
         try:
             supported_clients = json.load(indata)
+            user_servers = vim.eval("g:langIQ_servers")
+            log.debug("User specified language servers: %s", user_servers)
+            supported_clients.update(user_servers)
+
             # Make relative paths absolute
             for _, client in supported_clients.items():
                 client["cmd"] = client["cmd"].replace("{{ PLUGIN_DIR }}", plugin_dir)

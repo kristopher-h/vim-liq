@@ -128,7 +128,7 @@ class VimLspClient(object):
         self._client = lsp.client.LspClient(self._start_cmd, rpc_class=rpc_class)
         path = os.getcwd()
         # TODO: What happens if init fails?
-        self._client.initialize(root_path=path, root_uri=path)
+        self._client.initialize(root_path=path, root_uri="file://" + path)
 
     def _next_sign_id(self):
         self._sign_id += 1
@@ -146,6 +146,7 @@ class VimLspClient(object):
         """Update signs in current buffer."""
         file_ = V.current_file()
         log.debug("Update signs for %s", file_)
+        self.clear_signs()
         for diag in self.diagnostics.get(file_, []):
             id_ = self._next_sign_id()
             vim.command("sign place {id} line={line} name=LspSign "
@@ -168,14 +169,13 @@ class VimLspClient(object):
     def clear_signs(self):
         filename = V.current_file()
         V.clear_signs(filename)
-        if filename in self.diagnostics:
-            del self.diagnostics[filename]
 
     def process_diagnostics(self):
         cur_file = V.current_file()
         for diag in self._client.diagnostics():
-            self.diagnostics[diag.uri] = diag.diagnostics
-            if diag.uri == cur_file:
+            local_uri = re.sub("file://", "", diag.uri)
+            self.diagnostics[local_uri] = diag.diagnostics
+            if local_uri == cur_file:
                 self.update_signs()
 
     def display_diagnostics(self):
@@ -187,16 +187,14 @@ class VimLspClient(object):
     def td_did_open(self):
         language = V.filetype()
         self.td_version += 1
-        self._client.td_did_open(V.current_file(), language, self.td_version, V.current_source())
+        self._client.td_did_open("file://" + V.current_file(), language, self.td_version, V.current_source())
 
     def td_did_change(self):
-        self.clear_signs()
         self.td_version += 1
-        self._client.td_did_change(V.current_file(), self.td_version, V.current_source())
+        self._client.td_did_change("file://" + V.current_file(), self.td_version, V.current_source())
 
     def td_did_save(self):
-        self.clear_signs()
-        self._client.td_did_save(V.current_file())
+        self._client.td_did_save("file://" + V.current_file())
         self.process_diagnostics()
 
     def td_did_close(self):
@@ -213,7 +211,7 @@ class VimLspClient(object):
 
     def td_definition(self):
         row, col = V.cursor()
-        definitions = self._client.td_definition(V.current_file(), row, col)
+        definitions = self._client.td_definition("file://" + V.current_file(), row, col)
         if not definitions:
             V.warning("No definitions found")
         elif len(definitions) == 1:
@@ -225,7 +223,7 @@ class VimLspClient(object):
 
     def td_references(self):
         row, col = V.cursor()
-        references = self._client.td_references(V.current_file(), row, col, True)
+        references = self._client.td_references("file://" + V.current_file(), row, col, True)
         if not references:
             V.warning("No references found")
         elif len(references) == 1:
@@ -236,14 +234,13 @@ class VimLspClient(object):
             self._display_quickfix_from_location(references)
 
     def td_symbols(self):
-        symbols = self._client.td_document_symbol(V.current_file())
+        symbols = self._client.td_document_symbol("file://" + V.current_file())
         if not symbols:
             V.warning("No symbols found")
         # TODO: Improve symbol list to not only show locations
         self._display_quickfix_from_location(symbols)
 
     def td_completion(self):
-        log.debug("PAPAPAP")
         if omni_findstart():
             return
         # Make sure server has latest info before trying to complete
@@ -251,9 +248,9 @@ class VimLspClient(object):
         base, source = omni_add_base()
 
         self.td_version += 1
-        self._client.td_did_change(V.current_file(), self.td_version, source)
+        self._client.td_did_change("file://" + V.current_file(), self.td_version, source)
         row, col = V.cursor()
-        completions = self._client.td_completion(V.current_file(), row, col + len(base))
+        completions = self._client.td_completion("file://" + V.current_file(), row, col + len(base))
         # End of though love
         display_completions(completions)
 
