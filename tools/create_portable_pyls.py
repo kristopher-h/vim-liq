@@ -33,8 +33,8 @@ import zipfile
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
-URL = "https://github.com/palantir/python-language-server/archive/0.5.0.zip"
-UNZIPPED_NAME = "python-language-server-0.5.0"
+URL = "https://github.com/palantir/python-language-server/archive/0.9.0.zip"
+UNZIPPED_NAME = "python-language-server-0.9.0"
 ZIP_NAME = "python_lsp.zip"
 INSTALL_DIR_NAME = "python_lsp_server"
 DEFAULT_TARGET_DIR = os.path.join(
