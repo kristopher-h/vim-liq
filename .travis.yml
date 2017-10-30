@@ -3,4 +3,4 @@ install:
     - tools/create_portable_pyls.py
     - pip install tox
 script:
-    - tox
+    - cd plugin; tox; cd..
