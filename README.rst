@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/kristopher-h/vim-liq.svg?branch=master
+    :target: https://travis-ci.org/kristopher-h/vim-liq
+
 vim-liq
 =======
 

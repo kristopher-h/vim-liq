@@ -10,7 +10,6 @@ Todo
 #. Verify the plugin is working with vim built for python3 as well as 2
 #. Add rename support
 #. Automate release procedure
-#. Add travis support
 #. And much more
 
 Development Requirements
