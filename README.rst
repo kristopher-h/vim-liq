@@ -90,13 +90,13 @@ Additional commands:
 Requirements
 ------------
 
-* Vim 8 or later
-
-* Vim with support for:
+* Vim 8, or later, with support for:
 
   - python (2.7)
   - autocommands
   - quickfix
+  - timers
+  - async calls
   - possibly more without me knowing it?
 
 * python > 2.7 (for running the python language server)
