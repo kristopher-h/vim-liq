@@ -44,6 +44,7 @@ DEFAULT_TARGET_DIR = os.path.join(
 BACKPORTS_INIT = "__path__ = __import__('pkgutil').extend_path(__path__, __name__)\n"
 
 PYLS_MAIN = """#!/usr/bin/env python
+import glob
 import os
 import re
 import sys
@@ -51,7 +52,7 @@ import sys
 f_path = os.path.dirname(os.path.abspath(__file__))
 
 if sys.version_info[0] >= 3:
-    sitepack = os.path.join(f_path, "lib/python3.6/site-packages")
+    sitepack = glob.glob(os.path.join(f_path, "lib/python3.[0-9]/site-packages"))[0]
 else:
     sitepack = os.path.join(f_path, "lib/python2.7/site-packages")
 
@@ -86,7 +87,7 @@ def install(dest_dir, zipapp=False):
              "--upgrade", os.path.join(tempdir, UNZIPPED_NAME)])
         # install for py3
         subprocess.check_call(
-            ["pip3.6", "install", "--no-compile", "--prefix", install_dir, "--ignore-installed",
+            ["pip3", "install", "--no-compile", "--prefix", install_dir, "--ignore-installed",
              "--upgrade", os.path.join(tempdir, UNZIPPED_NAME)])
 
         # We need to create this init file since the import for configparser for python2
