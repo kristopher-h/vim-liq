@@ -1,0 +1,6 @@
+language: python
+install:
+    - tools/create_portable_pyls.py
+    - pip install tox
+script:
+    - tox
