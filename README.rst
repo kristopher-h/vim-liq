@@ -79,8 +79,12 @@ To disbale the default keymap set the following in your .vimrc::
 
     let g:langIQ_disablekeymap = 1
 
-Diagnostics is automatically enabled and uses vim marks. When moving to a line with a diagnostics
+Diagnostics is automatically enabled and uses vim signs. When moving to a line with a diagnostics
 mark the message for that line is displayed in the command-line.
+
+To disable the usage of signs set the following in your .vimrc::
+
+    let g:langIQ_disablesigns = 1
 
 Additional commands:
 

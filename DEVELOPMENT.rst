@@ -27,14 +27,15 @@ Testing of the pythoncode is done with tox. So first make sure you have tox inst
 
     pip install tox
 
+Optional: To install the supported language servers in the repo run::
+
+    tools/create_release --dev
+
 Once tox is installed simply run tox from the plugin folder of vim-liq::
 
     cd ~/path/to/vim-liq-repo/plugin
     tox
 
-This will run unittests and linting (currently flake8 is used for linting). As a part of testing
-the lsp servers supported will be downloaded/installed locally in plugin/tests/.lsp_install_dir.
-This is however only done the first time the test is run. To force a re-install one must manually
-remove the .lsp_install_dir.
+This will run unittests and linting (currently flake8 is used for linting).
 
 There currently is no tests for the vimscript code.

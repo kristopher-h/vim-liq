@@ -27,6 +27,7 @@ import lsp.jsonrpc
 from . import client
 from . import vimutils as V
 
+import vim
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -58,6 +59,7 @@ class ClientManager(object):
         Attributes:
             clients(dict): Dict where key is the language and value is the client object.
         """
+        self._use_signs = vim.eval("g:langIQ_disablesigns") == "0"
         self._supported_clients = supported_clients
         self.clients = {}
 
@@ -77,7 +79,7 @@ class ClientManager(object):
 
             log.debug("Starting client, start_cmd: %s, transport: %s", start_cmd, transport)
             try:
-                l_client = client.VimLspClient(start_cmd, transport)
+                l_client = client.VimLspClient(start_cmd, transport, use_signs=self._use_signs)
                 l_client.start_server()
                 log.debug("Added client for %s", ft)
                 self.clients[ft] = l_client

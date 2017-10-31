@@ -2,7 +2,7 @@ language: python
 python:
     - "3.6"
 install:
-    - tools/create_portable_pyls.py
+    - tools/create_release.py --dev
     - pip install tox
 script:
     - cd plugin; tox

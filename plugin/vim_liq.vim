@@ -35,6 +35,9 @@ endif
 if !exists("g:langIQ_disablekeymap")
     let g:langIQ_disablekeymap = 0
 endif
+if !exists("g:langIQ_disablesigns")
+    let g:langIQ_disablesigns = 0
+endif
 let g:vim_lsp_logdir = expand("<sfile>:h")."/log/"
 let g:vim_lsp_log_to_file = 0
 let g:vim_lsp_debug = 1

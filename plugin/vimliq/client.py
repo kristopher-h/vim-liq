@@ -20,6 +20,7 @@ import linecache
 import logging
 import os
 import re
+import time
 
 import lsp.client
 import lsp.jsonrpc
@@ -102,14 +103,17 @@ class VimLspClient(object):
     VimLspClient also expose functions for communicating with the server.
     """
 
-    def __init__(self, start_cmd, transport):
+    def __init__(self, start_cmd, transport, use_signs=True):
         """Initialize
 
         Args:
-            supported_clients(dict): See supported_clients.json
+            start_cmd(str): Command used to start LSP server connected to this client.
+            transport(str): Currently only "STDIO" is supported.
+            use_signs(bool): If True use vim "signs".
         """
         self._start_cmd = start_cmd
         self._transport = transport
+        self._use_signs = use_signs
         self.td_version = 0
         self._sign_id = 1
         self.diagnostics = {}
@@ -131,6 +135,7 @@ class VimLspClient(object):
         self._client.initialize(root_path=path, root_uri="file://" + path)
 
     def _next_sign_id(self):
+        log.debug("next sign %s", time.time())
         self._sign_id += 1
         file_ = V.current_file()
         all_ids = set(re.findall("id=(\d+)", V.vim_command("sign place file={}".format(file_))))
@@ -140,6 +145,7 @@ class VimLspClient(object):
                 self._sign_id = 1
             self._sign_id += 1
 
+        log.debug("next sign %s", time.time())
         return self._sign_id
 
     @staticmethod
@@ -180,7 +186,7 @@ class VimLspClient(object):
         for diag in self._client.diagnostics():
             local_uri = self._parse_uri(diag.uri)
             self.diagnostics[local_uri] = diag.diagnostics
-            if local_uri == cur_file:
+            if local_uri == cur_file and self._use_signs:
                 self.update_signs()
 
     def display_diagnostics(self):
