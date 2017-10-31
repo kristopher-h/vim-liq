@@ -47,7 +47,7 @@ def test_ClientManager_add_client(
     assert not client_manager.clients
     client_manager.add_client()
     assert client_manager.clients["python"]
-    mock_.assert_called_once_with(expected, "trans")
+    mock_.assert_called_once_with(expected, "trans", use_signs=False)
     mock_().start_server.assert_called_once_with()
 
 
