@@ -26,10 +26,11 @@ Installation
 
 The instruction below is only tested on osX and Linux.
 
-Installation is done by downloading an extracting a release bundle, e.g. using pathogen::
+Installation is done by downloading an extracting a release bundle, example::
 
-    cd ~/.vim/bundle
-    wget https://github.com/kristopher-h/vim-liq/releases/download/v0.1.0-beta/vim-liq.tgz
+    mkdir -p ~/.vim/pack/plugins/start
+    cd ~/.vim/pack/plugins/start
+    wget https://github.com/kristopher-h/vim-liq/releases/download/<version>/vim-liq.tgz
     tar xzf vim-liq.tgz
 
 .. NOTE::
@@ -60,10 +61,10 @@ Upgrading
 
 To upgrade vim-liq simply remove the old vim-liq folder and redo the installation. Example::
 
-    cd ~/.vim/bundle
+    cd ~/.vim/pack/plugins/start
     rm -r vim-liq
 
-After that redo the installation.
+After that follow the installation instruction again.
 
 Usage
 -----

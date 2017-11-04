@@ -5,7 +5,6 @@ Todo
 ----
 
 #. Clean up, refactor
-#. Add documentation availible via help in vim
 #. Add support for more lsp servers
 #. Verify the plugin is working with vim built for python3 as well as 2
 #. Add rename support
