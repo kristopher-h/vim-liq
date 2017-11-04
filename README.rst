@@ -30,7 +30,7 @@ Installation is done by downloading an extracting a release bundle, example::
 
     mkdir -p ~/.vim/pack/plugins/start
     cd ~/.vim/pack/plugins/start
-    wget https://github.com/kristopher-h/vim-liq/releases/latest
+    wget https://github.com/kristopher-h/vim-liq/releases/download/v0.1.2-beta/vim-liq.tgz
     tar xzf vim-liq.tgz
 
 .. NOTE::
