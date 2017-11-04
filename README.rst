@@ -21,6 +21,26 @@ The following high level, LSP, features have support:
 #. Definition
 #. Symbols
 
+Currently the following languages are supported:
+
+#. python
+
+For more information see doc/vim-liq.txt or help vim-liq from whitin vim.
+
+Requirements
+------------
+
+* Vim 8, or later, with support for:
+
+  - python (2.7)
+  - autocommands
+  - quickfix
+  - timers
+  - async calls
+  - possibly more without me knowing it?
+
+* python > 2.7 (for running the python language server)
+
 Installation
 ------------
 
@@ -37,24 +57,6 @@ Installation is done by downloading an extracting a release bundle, example::
     Do not use git clone to clone the repo as that will leave you without any LSP servers. For
     more information see the DEVELOMPENT.rst.
 
-Currently LSP servers for the following languages are included:
-
-#. python
-
-To add/overwrite language servers add the following in your .vimrc::
-
-    let g:langIQ_servers = {}
-    let g:langIQ_servers["<language>"] = {"cmd": "<start command>"}
-
-Example::
-
-    let g:langIQ_servers = {}
-    let g:langIQ_servers["python"] = {"cmd": "pyls"}
-    let g:langIQ_servers["rust"] = {"cmd": "rustup run beta rls"}
-
-.. NOTE::
-    When adding custom servers expect compatibility issues. This since the only language server 
-    that has been used during development/testing is the bundled one.
 
 Upgrading
 ~~~~~~~~~
@@ -76,38 +78,7 @@ The plugin by default map the following keybindings:
 | **LEADER-d** => goto definition (normal mode)
 | **LEADER-f** => find references (normal mode)
 
-To disbale the default keymap set the following in your .vimrc::
-
-    let g:langIQ_disablekeymap = 1
-
-Diagnostics is automatically enabled and uses vim signs. When moving to a line with a diagnostics
-mark the message for that line is displayed in the command-line.
-
-To disable the usage of signs set the following in your .vimrc::
-
-    let g:langIQ_disablesigns = 1
-
-Additional commands:
-
-| **LspDiagnostics:** Display diagnostics in the quickfix window.
-| **LspReferences:** Find all references for symbol under cursor. Display result in quickfix window.
-| **LspDefinition:** Goto defintion. If more than one definition is found display result in quickfix window.
-| **LspLog:** Display debuglogs from vim-liq.
-| **LspSymbol:** Display symbols in current file.
-
-Requirements
-------------
-
-* Vim 8, or later, with support for:
-
-  - python (2.7)
-  - autocommands
-  - quickfix
-  - timers
-  - async calls
-  - possibly more without me knowing it?
-
-* python > 2.7 (for running the python language server)
+For more doc/vim-liq.txt or run "help vim-liq" from whitin vim.
 
 Credits
 -------

@@ -6,8 +6,13 @@ CONTENTS                                                              *vim-liq*
     1. Intro .................................................. |vim-liq-intro|
     2. Requirements .................................... |vim-liq-requirements|
     3. Usage .................................................. |vim-liq-usage|
-    3.1 Key bingings .................................... |vim-liq-keybindings|
+    3.1. Key bindings ................................... |vim-liq-keybindings|
+    3.2. Custom LSP server ............................ |vim-liq-custom-server|
+    3.3. Commands .......................................... |vim-liq-commands|
+    3.4. Settings .......................................... |vim-liq-settings|
     4. Licence .............................................. |vim-liq-licence|
+
+
 ===============================================================================
 1. Intro                                                        *vim-liq-intro*
 
@@ -16,6 +21,7 @@ for something along the lines of vim- "Language IQ" or "Lingustic
 Intelligence".
 
 
+===============================================================================
 2. Requirements                                          *vim-liq-requirements*
 
 Vim 8, or later, with support for:
@@ -30,6 +36,7 @@ python 2.7 or later (including python3) is needed to run the python
 language server (pyls).
 
 
+===============================================================================
 3. Usage                                                        *vim-liq-usage*
 
 The following high level, LSP, features have support:
@@ -47,11 +54,8 @@ Diagnostics is automatically enabled and uses vim signs. When moving to a line
 with a diagnostics mark the message for that line is displayed in the
 command-line.
 
-To disable the usage of signs set the following in your .vimrc::
 
-    let g:langIQ_disablesigns = 1
-
-
+-------------------------------------------------------------------------------
 3.1. Key bindings                                          *vim-liq-keybindings*
 
 The plugin by default map the following keybindings:
@@ -61,10 +65,60 @@ CTRL-Space: completion (insert mode)
 LEADER-d: goto definition (normal mode)
 LEADER-f: find references (normal mode)
 
-To disbale the default key bindings set the following in your .vimrc:
 
-    let g:langIQ_disablekeymap = 1
+-------------------------------------------------------------------------------
+3.2 Custom LSP servers                                  *vim-liq-custom-server*
 
+To add/overwrite language servers add the following in your .vimrc::
+
+    let g:langIQ_servers - {}
+    let g:langIQ_servers["<language>"] - {"cmd": "<start command>"}
+
+Example::
+
+    let g:langIQ_servers - {}
+    let g:langIQ_servers["python"] - {"cmd": "pyls"}
+    let g:langIQ_servers["rust"] - {"cmd": "rustup run beta rls"}
+
+NOTE: When adding custom servers expect compatibility issues. This since
+the only language server that has been used during development/testing is the
+bundled one.
+
+
+-------------------------------------------------------------------------------
+3.3. Commands                                                *vim-liq-commands*
+
+*LspDiagnostics*
+Display diagnostics in the quickfix window.
+
+*LspReferences*
+Find all references for symbol under cursor. Display result in
+quickfix window.
+
+*LspDefinition*
+Goto defintion. If more than one definition is found display
+result in quickfix window.
+
+*LspLog*
+Display debuglogs from vim-liq.
+
+*LspSymbol*
+Display symbols in current file.
+
+
+-------------------------------------------------------------------------------
+3.4. Settings                                                *vim-liq-settings*
+
+Disable the default key bindings:
+
+    let g:langIQ_disablekeymap - 1
+
+Disable the usage of signs:
+
+    let g:langIQ_disablesigns - 1
+
+
+===============================================================================
 4. Licence                                                    *vim-liq-licence*
 
 GPLv3 or later.
