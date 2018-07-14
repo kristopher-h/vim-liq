@@ -33,8 +33,8 @@ import zipfile
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
-URL = "https://github.com/palantir/python-language-server/archive/0.9.0.zip"
-UNZIPPED_NAME = "python-language-server-0.9.0"
+URL = "https://github.com/palantir/python-language-server/archive/0.21.2.zip"
+UNZIPPED_NAME = "python-language-server-0.21.2"
 ZIP_NAME = "python_lsp.zip"
 INSTALL_DIR_NAME = "python_lsp_server"
 DEFAULT_TARGET_DIR = os.path.join(
@@ -81,14 +81,15 @@ def install(dest_dir, zipapp=False):
             log.debug("Unzipping %s to %s", zip_path, tempdir)
             unzipit.extractall(path=tempdir)
 
+        extras = "[rope,yapf,mccabe,pyflakes,pycodestyle,pydocstyle]"
         # install for py2
         subprocess.check_call(
             ["pip2.7", "install", "--no-compile", "--prefix", install_dir, "--ignore-installed",
-             "--upgrade", os.path.join(tempdir, UNZIPPED_NAME)])
+             "--upgrade", os.path.join(tempdir, UNZIPPED_NAME) + extras])
         # install for py3
         subprocess.check_call(
             ["pip3", "install", "--no-compile", "--prefix", install_dir, "--ignore-installed",
-             "--upgrade", os.path.join(tempdir, UNZIPPED_NAME)])
+             "--upgrade", os.path.join(tempdir, UNZIPPED_NAME) + extras])
 
         # We need to create this init file since the import for configparser for python2
         # otherwise fails. Since the pth file in site-packages is not read. Note that adding the

@@ -1,6 +1,6 @@
 {
     "python": {
-        "cmd": "python {{ PLUGIN_DIR }}/servers/python/pyls",
+        "cmd": "python {{ PLUGIN_DIR }}/servers/python/pyls --log-file pyls.log ",
         "transport": "STDIO"
     }
 }

@@ -4,9 +4,9 @@ vim-liq development
 Todo
 ----
 
-#. Clean up, refactor
+#. Add more unit tests to get the coverage up
 #. Add support for more lsp servers
-#. Verify the plugin is working with vim built for python3 as well as 2
+#. Verify that the plugin is working with vim built for python3 as well as 2
 #. Add rename support
 #. Automate release procedure
 #. And much more

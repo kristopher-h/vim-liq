@@ -15,82 +15,26 @@
 # You should have received a copy of the GNU General Public License
 # along with vim-liq.  If not, see <http://www.gnu.org/licenses/>.
 """LSP client module."""
+import functools
 import json
-import linecache
 import logging
 import os
 import re
 import time
+try:
+    import Queue as queue
+except ImportError:
+    import queue
 
-import lsp.client
-import lsp.jsonrpc
-
-from . import vimutils as V
+import vimliq.base as base
+import vimliq.jsonrpc as jsonrpc
+import vimliq.lsp as P
+import vimliq.vimutils as V
 
 import vim
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
-
-
-# Vim commands
-# TODO: move to private in VimLspClient or make generic in vimutils
-def omni_findstart():
-    """Check if this is the first invocation of omnifunc.
-
-    Call vim legacy stuff for this.
-    """
-    if vim.eval("a:findstart") == "1":
-        vim.command("return syntaxcomplete#Complete(1, '')")
-        return True
-    return False
-
-
-def omni_add_base():
-    base = vim.eval("a:base")
-    row, col = V.cursor()
-    # source = copy.deepcopy(vim.current.buffer)
-    source = vim.current.buffer[:]
-    line = source[row]
-    source[row] = line[:col] + base + line[col:]
-    return (base, "\n".join(source))
-
-
-def display_completions(completions):
-    """display completions list.
-
-    Since this is invoked by omnifunc vim is expecting to get a list with completions
-    returned.
-
-    Args:
-        completions(list(Completion)):
-
-    """
-    content = []
-    for comp in completions:
-        comp_line = {"word": comp.label}
-        if comp.kind:
-            kind = ""
-            if comp.kind in [1, 2]:
-                kind = "f"
-            elif comp.kind in [5, 10]:
-                kind = "m"
-            elif comp.kind in [6]:
-                kind = "v"
-            if kind:
-                comp_line["kind"] = kind
-
-        if comp.detail:
-            comp_line["menu"] = comp.detail
-
-        if comp.documentation:
-            comp_line["info"] = comp.documentation
-
-        content.append(comp_line)
-
-    # Vim list/dict just so happen to map to a json string
-    retstr = json.dumps(content, separators=(",", ":"))
-    vim.command("return {}".format(retstr))
 
 
 class VimLspError(Exception):
@@ -103,42 +47,362 @@ class VimLspClient(object):
     VimLspClient also expose functions for communicating with the server.
     """
 
-    def __init__(self, start_cmd, transport, use_signs=True):
+    def __init__(self, start_cmd):
         """Initialize
 
         Args:
             start_cmd(str): Command used to start LSP server connected to this client.
-            transport(str): Currently only "STDIO" is supported.
             use_signs(bool): If True use vim "signs".
         """
         self._start_cmd = start_cmd
-        self._transport = transport
-        self._use_signs = use_signs
+        self._use_signs = vim.eval("g:langIQ_disablesigns") == "0"
+        self._use_highlight = vim.eval("g:langIQ_disablehighlight") == "0"
         self.td_version = 0
         self._sign_id = 1
         self.diagnostics = {}
-        self._client = None
+        self.completions = "[]"
+        self._initialized = False
+        self._proc_id = os.getpid()
+        self.rpc = None
+        self.io = None
+        self._event_queue = queue.Queue()
 
     def shutdown(self):
-        self._client.shutdown()
+        self.io.close()
+
+    def process(self):
+        while not self._event_queue.empty():
+            handler, result, exception = self._event_queue.get()
+            # For now just log the error
+            if exception:
+                log.warn("Server replied with an error. Error: %s", exception)
+                return
+            handler(result)
+
+    def _handler(self, handler):
+        return functools.partial(self.handle_msg, self, handler)
 
     def start_server(self):
         """Start the LSP client and the server."""
-        if self._transport == "STDIO":
-            rpc_class = lsp.jsonrpc.JsonRpcStdInOut
-        else:
-            raise VimLspError("Unknown transport protocol: {}".format(self._transport))
+        self.io = base.StdIO(self._start_cmd)
+        self.io.connect()
+        transport = base.LspBase(self.io)
+        self.rpc = jsonrpc.JsonRpc(transport)
+        self.rpc.register_notification_handler(
+            P.M_DIAGNOSTICS, self._handler(self.handle_diagnostics))
+        self.initialize()
 
-        self._client = lsp.client.LspClient(self._start_cmd, rpc_class=rpc_class)
-        path = os.getcwd()
-        # TODO: What happens if init fails?
-        self._client.initialize(root_path=path, root_uri="file://" + path)
+    # Request methods
+    def initialize(self):
+        params = {
+            P.K_PROCESS_ID: self._proc_id,
+            P.K_ROOT_URI: "file://" + os.getcwd(),
+            P.K_CAPABILITES: {},
+        }
+        self.rpc.call_async(P.M_INITIALIZE, params, callback=self._handler(self.handle_initialize))
+
+    def completion(self):
+        if not self._initialized:
+            return {}
+        row, col = V.cursor()
+        params = {
+            P.K_TD: {
+                P.K_URI: "file://" + V.current_file(),
+            },
+            P.K_POSITION: {
+                P.K_LINE: row,
+                P.K_CHAR: col,
+            }
+        }
+        try:
+            completions = self.rpc.call(P.M_TD_COMPLETION, params)
+        except jsonrpc.JsonRpcError as exc:
+            log.error("Completion failed. Error: %s", exc)
+            completions = {}
+        return self._parse_completion(completions)
+
+    # Notifications
+    def initialized(self):
+        """Send initialized message."""
+        self.rpc.call_async(P.M_INITIALIZED, {}, notify=True)
+
+    def references(self):
+        if not self._initialized:
+            return
+        row, col = V.cursor()
+        params = {
+            P.K_TD: {
+                P.K_URI: "file://" + V.current_file(),
+            },
+            P.K_POSITION: {
+                P.K_LINE: row,
+                P.K_CHAR: col,
+            },
+            P.K_CONTEXT: {
+                P.K_INCLUDE_DECLARATION: True,
+            },
+        }
+        self.rpc.call_async(
+            P.M_TD_REFERENCES, params, callback=self._handler(self.handle_references))
+
+    def definition(self):
+        if not self._initialized:
+            return
+        row, col = V.cursor()
+        params = {
+            P.K_TD: {
+                P.K_URI: "file://" + V.current_file(),
+            },
+            P.K_POSITION: {
+                P.K_LINE: row,
+                P.K_CHAR: col,
+            },
+            P.K_CONTEXT: {
+                P.K_INCLUDE_DECLARATION: True,
+            },
+        }
+        self.rpc.call_async(
+            P.M_TD_DEFINITION, params, callback=self._handler(self.handle_definition))
+
+    def symbols(self):
+        if not self._initialized:
+            return
+        row, col = V.cursor()
+        params = {
+            P.K_TD: {
+                P.K_URI: "file://" + V.current_file(),
+            },
+        }
+        self.rpc.call_async(
+            P.M_TD_SYMBOLS, params, callback=self._handler(self.handle_symbols))
+
+    def td_did_open(self):
+        if not self._initialized:
+            return
+        self.td_version += 1
+        params = {
+            P.K_TD: {
+                P.K_URI: "file://" + V.current_file(),
+                P.K_LANG_ID: V.filetype(),
+                P.K_VERSION: self.td_version,
+                P.K_TEXT: V.current_source()
+            }
+        }
+        self.rpc.call_async(P.M_TD_DID_OPEN, params, notify=True)
+
+    def td_did_save(self):
+        if not self._initialized:
+            return
+        params = {
+            P.K_TD: {
+                P.K_URI: "file://" + V.current_file(),
+            }
+        }
+        self.rpc.call_async(P.M_TD_DID_SAVE, params, notify=True)
+
+    def td_did_close(self):
+        if not self._initialized:
+            return
+        params = {
+            P.K_TD: {
+                P.K_URI: "file://" + V.current_file(),
+            }
+        }
+        self.rpc.call_async(P.M_TD_DID_CLOSE, params, notify=True)
+
+    def td_did_change(self):
+        if not self._initialized:
+            return
+        self.td_version += 1
+        params = {
+            P.K_TD: {
+                P.K_URI: "file://" + V.current_file(),
+                P.K_VERSION: self.td_version,
+            },
+            P.K_CONTENT_CHANGES: [{
+                P.K_TEXT: V.current_source(),
+            }],
+        }
+        self.rpc.call_async(P.M_TD_DID_CHANGE, params, notify=True)
+
+    # async handlers
+    @staticmethod
+    def handle_msg(self, handler, result, exception):
+        self._event_queue.put((handler, result, exception))
+
+    def handle_initialize(self, msg):
+        """Handle initialize response."""
+        self._initialized = True
+        # self.initialized()
+        # TODO: Loop through all open files? And not only current?
+        self.td_did_open()
+
+    def handle_references(self, msg):
+        """Handle references msg."""
+        if not msg:
+            V.warning("No references found")
+            return
+        qf_content = []
+        for loc in msg:
+            qf_line = {
+                "filename": self._parse_uri(loc[P.K_URI]),
+                "lnum": loc[P.K_RANGE][P.K_START][P.K_LINE] + 1,
+                "col": loc[P.K_RANGE][P.K_START][P.K_CHAR],
+            }
+            qf_content.append(qf_line)
+        V.display_quickfix(qf_content)
+
+    def handle_definition(self, msg):
+        """Handle definition msg."""
+        log.debug(msg)
+        if not msg:
+            V.warning("No definition found")
+            return
+        qf_content = []
+        for loc in msg:
+            qf_line = {
+                "filename": self._parse_uri(loc[P.K_URI]),
+                "lnum": loc[P.K_RANGE][P.K_START][P.K_LINE],
+                "col": loc[P.K_RANGE][P.K_START][P.K_CHAR],
+            }
+            qf_content.append(qf_line)
+
+        if len(qf_content) == 1:
+            jto = qf_content[0]
+            V.jump_to(jto["filename"], jto["lnum"], jto["col"])
+        else:
+            V.display_quickfix(qf_content)
+
+    def handle_symbols(self, msg):
+        """Handle symbols response."""
+        log.debug(msg)
+        if not msg:
+            V.warning("No symbols found")
+            return
+        qf_content = []
+        for sym in msg:
+            qf_line = {
+                "filename": self._parse_uri(sym[P.K_LOCATION][P.K_URI]),
+                "lnum": sym[P.K_LOCATION][P.K_RANGE][P.K_START][P.K_LINE],
+                "col": sym[P.K_LOCATION][P.K_RANGE][P.K_START][P.K_CHAR],
+                "text": sym[P.K_NAME],
+            }
+            qf_content.append(qf_line)
+
+        V.display_quickfix(qf_content)
+
+    def handle_diagnostics(self, msg):
+        """Handle diagnostics notifications."""
+        log.debug("enter")
+        local_uri = self._parse_uri(msg[P.K_URI])
+        self.diagnostics[local_uri] = msg[P.K_DIAGNOSTICS]
+        if self._use_signs:
+            self.update_signs(local_uri)
+        if self._use_highlight:
+            self.update_highlight(local_uri)
+
+    # Public functions
+    def display_diagnostics(self):
+        filename = V.current_file()
+        if filename not in self.diagnostics:
+            return
+
+        diagnostics = self.diagnostics[filename]
+        qf_content = []
+        for loc in diagnostics:
+            qf_line = {"filename": filename,
+                       "lnum": loc[P.K_RANGE][P.K_START][P.K_LINE] + 1,
+                       "col": loc[P.K_RANGE][P.K_START][P.K_CHAR],
+                       "text": loc[P.K_MESSAGE]}
+            qf_content.append(qf_line)
+        V.display_quickfix(qf_content)
+
+    def display_diagnostics_help(self):
+        filename = V.current_file()
+        if filename in self.diagnostics:
+            line, _ = V.cursor()
+            # TODO: Improve performance here by indexing on line number as well as filename
+            for diag in self.diagnostics[filename]:
+                if diag[P.K_RANGE][P.K_START][P.K_LINE] == line:
+                    V.warning("LspDiagnostic: {} | col: {} | {}:{}".format(
+                        diag[P.K_MESSAGE],
+                        diag[P.K_RANGE][P.K_START][P.K_CHAR],
+                        diag.get(P.K_SOURCE, ""),
+                        diag.get(P.K_CODE, "")
+                    ))
+                    break
+            else:
+                # clear
+                V.warning("")
+
+    def update_highlight(self, file_=None):
+        if not file_:
+            file_ = V.current_file()
+        log.debug("Update highlight for %s", file_)
+
+        try:
+            vim.command("call matchdelete(w:langiq_match)")
+        except vim.error:
+            pass
+
+        match_regex = []
+        for diag in self.diagnostics.get(file_, []):
+            line = diag[P.K_RANGE][P.K_START][P.K_LINE] + 1
+            col_start = diag[P.K_RANGE][P.K_START][P.K_CHAR]
+            if col_start < 0:
+                col_start = 0
+            col_end = diag[P.K_RANGE][P.K_END][P.K_CHAR] + 1
+            if col_end < 0:
+                col_end = 0
+            match_regex.append(r"\%{}l\%1c".format(line))
+            match_regex.append(r"\%{}l\%>{}v.\%<{}v".format(line, col_start, col_end))
+
+        cmd = r"let w:langiq_match=matchadd('ColorColumn', '{}')".format(r"\|".join(match_regex))
+        log.debug("Highlight cmd: %s", cmd)
+        vim.command(cmd)
+
+    def omni_func(self):
+        """Blocking omnifunc."""
+        if vim.eval("a:findstart") == "1":
+            vim.command("return syntaxcomplete#Complete(1, '')")
+            return
+        self.td_did_change()
+        completions = self.completion()
+        vim.command("return {}".format(completions))
+
+    def update_signs(self, file_=None):
+        """Update signs in current buffer."""
+        # If completion is ongoing to not show signs as it is insanely slow
+        # and causes flickering.
+        if not file_:
+            file_ = V.current_file()
+        log.debug("Update signs for %s", file_)
+        self.clear_signs()
+        for diag in self.diagnostics.get(file_, []):
+            id_ = self._next_sign_id()
+            vim.command(
+                "sign place {id} line={line} name=LspSign file={file}".format(
+                    id=id_,
+                    line=diag[P.K_RANGE][P.K_START][P.K_LINE] + 1,
+                    file=file_
+                )
+            )
+
+    def clear_signs(self):
+        filename = V.current_file()
+        V.clear_signs(filename)
+
+    # Private functions
+    def _get_id(self):
+        """Get unique request id."""
+        self._id += 1
+        return self._id
 
     def _next_sign_id(self):
         log.debug("next sign %s", time.time())
         self._sign_id += 1
         file_ = V.current_file()
-        all_ids = set(re.findall("id=(\d+)", V.vim_command("sign place file={}".format(file_))))
+        all_ids = set(re.findall(r"id=(\d+)", V.vim_command("sign place file={}".format(file_))))
         while self._sign_id in all_ids:
             # cap at an arbitrary figure just for the sake of it
             if self._sign_id > 65000:
@@ -149,148 +413,37 @@ class VimLspClient(object):
         return self._sign_id
 
     @staticmethod
+    def _parse_completion(msg):
+        """Parse completion response."""
+        content = []
+        for comp in msg[P.K_ITEMS]:
+            comp_line = {"word": comp[P.K_LABEL]}
+            kind = comp.get(P.K_KIND)
+            if kind:
+                vimkind = ""
+                if kind in [1, 2]:
+                    vimkind = "f"
+                elif kind in [5, 10]:
+                    vimkind = "m"
+                elif kind in [6]:
+                    vimkind = "v"
+                if vimkind:
+                    comp_line["kind"] = vimkind
+
+            detail = comp.get(P.K_DETAIL)
+            if detail:
+                comp_line["menu"] = detail
+
+            doc = comp.get(P.K_DOCUMENTATION, "")
+            if doc:
+                comp_line["info"] = doc
+
+            content.append(comp_line)
+
+        # Vim list/dict just so happen to map to a json string
+        return json.dumps(content, separators=(",", ":"))
+
+    @staticmethod
     def _parse_uri(uri):
         """Parse uri."""
         return re.sub("file://", "", uri)
-
-    def update_signs(self):
-        """Update signs in current buffer."""
-        file_ = V.current_file()
-        log.debug("Update signs for %s", file_)
-        self.clear_signs()
-        for diag in self.diagnostics.get(file_, []):
-            id_ = self._next_sign_id()
-            vim.command("sign place {id} line={line} name=LspSign "
-                        "file={file}".format(id=id_, line=diag.start_line + 1, file=file_))
-
-    def display_sign_help(self):
-        filename = V.current_file()
-        if filename in self.diagnostics:
-            line, _ = V.cursor()
-            # TODO: Improve performance here by indexing on line number as well as filename
-            for diag in self.diagnostics[filename]:
-                if diag.start_line == line:
-                    V.warning("LspDiagnostic: {} | col: {} | {}:{}".format(
-                        diag.message, diag.start_char, diag.source, diag.code))
-                    break
-            else:
-                # clear
-                V.warning("")
-
-    def clear_signs(self):
-        filename = V.current_file()
-        V.clear_signs(filename)
-
-    def process_diagnostics(self):
-        cur_file = V.current_file()
-        for diag in self._client.diagnostics():
-            local_uri = self._parse_uri(diag.uri)
-            self.diagnostics[local_uri] = diag.diagnostics
-            if local_uri == cur_file and self._use_signs:
-                self.update_signs()
-
-    def display_diagnostics(self):
-        file_ = V.current_file()
-        if file_ in self.diagnostics:
-            diags = self.diagnostics[file_]
-            self._display_quickfix_from_diagnostics(file_, diags)
-
-    def td_did_open(self):
-        language = V.filetype()
-        self.td_version += 1
-        self._client.td_did_open(
-            "file://" + V.current_file(), language, self.td_version, V.current_source())
-
-    def td_did_change(self):
-        self.td_version += 1
-        self._client.td_did_change(
-            "file://" + V.current_file(), self.td_version, V.current_source())
-
-    def td_did_save(self):
-        self._client.td_did_save("file://" + V.current_file())
-        self.process_diagnostics()
-
-    def td_did_close(self):
-        # Not using current file here since it might be the wrong name
-        # when autocmd BufDelete is triggered.
-        filepath = vim.eval("expand('<afile>')")
-        # If filepath is empty there is no point in doing anything.
-        # This can happen for example if closing quickfixlist buffer with cclose
-        # while standing in an acutal buffer.
-        if filepath:
-            log.debug("Closing %s", filepath)
-
-            self._client.td_did_close(filepath)
-
-    def td_definition(self):
-        row, col = V.cursor()
-        definitions = self._client.td_definition("file://" + V.current_file(), row, col)
-        if not definitions:
-            V.warning("No definitions found")
-        elif len(definitions) == 1:
-            def_ = definitions[0]
-            V.jump_to(self._parse_uri(def_.uri), def_.start_line, def_.start_char)
-        else:
-            # multiple matches
-            self._display_quickfix_from_location(definitions)
-
-    def td_references(self):
-        row, col = V.cursor()
-        references = self._client.td_references("file://" + V.current_file(), row, col, True)
-        if not references:
-            V.warning("No references found")
-        elif len(references) == 1:
-            ref = references[0]
-            V.jump_to(self._parse_uri(ref.uri), ref.start_line, ref.start_char)
-        else:
-            # multiple matches
-            self._display_quickfix_from_location(references)
-
-    def td_symbols(self):
-        symbols = self._client.td_document_symbol("file://" + V.current_file())
-        if not symbols:
-            V.warning("No symbols found")
-        # TODO: Improve symbol list to not only show locations
-        self._display_quickfix_from_location(symbols)
-
-    def td_completion(self):
-        if omni_findstart():
-            return
-        # Make sure server has latest info before trying to complete
-        # Since life is tough we have to do some wierd things
-        base, source = omni_add_base()
-
-        self.td_version += 1
-        self._client.td_did_change("file://" + V.current_file(), self.td_version, source)
-        row, col = V.cursor()
-        completions = self._client.td_completion("file://" + V.current_file(), row, col + len(base))
-        # End of though love
-        display_completions(completions)
-
-    @staticmethod
-    def _display_quickfix_from_location(locations):
-        """display quickfix list.
-
-        Args:
-            locations(list(Location)):
-        """
-        qf_content = []
-        for loc in locations:
-            uri = VimLspClient._parse_uri(loc.uri)
-            qf_line = {"filename": uri,
-                       "lnum": loc.start_line + 1,
-                       "col": loc.start_char,
-                       "text": linecache.getline(uri, loc.start_line + 1)}
-            qf_content.append(qf_line)
-        V.display_quickfix(qf_content)
-
-    @staticmethod
-    def _display_quickfix_from_diagnostics(filename, diagnostics):
-        qf_content = []
-        for loc in diagnostics:
-            qf_line = {"filename": filename,
-                       "lnum": loc.start_line + 1,
-                       "col": loc.start_char,
-                       "text": loc.message}
-            qf_content.append(qf_line)
-        V.display_quickfix(qf_content)

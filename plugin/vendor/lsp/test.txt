@@ -1,3 +1,0 @@
-Content-Length: 138
-
-{"params": {"rootUri": null, "capabilities": {}, "rootPath ": null, "processId": null}, "id": 1, "jsonrpc": "2.0", "method": "initialize"}

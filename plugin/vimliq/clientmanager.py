@@ -21,13 +21,8 @@ from functools import wraps
 import logging
 import shlex
 
-import lsp.client
-import lsp.jsonrpc
-
 from . import client
 from . import vimutils as V
-
-import vim
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -38,9 +33,9 @@ def handle_error(func):
     def wrapper(*args, **kwargs):
         try:
             func(*args, **kwargs)
-        except lsp.client.LspError as exc:
-            log.debug("Got error from LSP server. message=%s, code=%s, data=%s",
-                      exc, exc.code, exc.data)
+        # Todo be more strict
+        # except Exception as exc:
+        #     log.debug("Got error from client. message=%s", exc)
         except Exception:
             log.exception("")
 
@@ -59,7 +54,6 @@ class ClientManager(object):
         Attributes:
             clients(dict): Dict where key is the language and value is the client object.
         """
-        self._use_signs = vim.eval("g:langIQ_disablesigns") == "0"
         self._supported_clients = supported_clients
         self.clients = {}
 
@@ -75,15 +69,16 @@ class ClientManager(object):
         # Only add if supported and not already added
         if ft in self._supported_clients and ft not in self.clients:
             start_cmd = shlex.split(self._supported_clients[ft]["cmd"])
-            transport = self._supported_clients[ft].get("transport", "STDIO")
 
-            log.debug("Starting client, start_cmd: %s, transport: %s", start_cmd, transport)
+            log.debug("Starting client, start_cmd: %s", start_cmd)
             try:
-                l_client = client.VimLspClient(start_cmd, transport, use_signs=self._use_signs)
+                l_client = client.VimLspClient(start_cmd)
                 l_client.start_server()
                 log.debug("Added client for %s", ft)
                 self.clients[ft] = l_client
-            except (lsp.client.LspError, OSError, IOError) as exc:
+
+            # TODO: be more strict
+            except (Exception, OSError, IOError) as exc:
                 log.error("Failed to add client for %s. Got error %s", ft, exc)
                 # remove client from supported to avoid further calls
                 del self._supported_clients[ft]

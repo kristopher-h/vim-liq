@@ -33,7 +33,6 @@ import os
 import sys
 test_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(test_dir, '..'))
-sys.path.insert(0, os.path.join(test_dir, '../vendor/lsp'))
 
 try:
     import unittest.mock as mock

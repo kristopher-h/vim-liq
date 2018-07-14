@@ -36,11 +36,19 @@ if !exists("g:langIQ_disablekeymap")
     let g:langIQ_disablekeymap = 0
 endif
 if !exists("g:langIQ_disablesigns")
-    let g:langIQ_disablesigns = 0
+    let g:langIQ_disablesigns = 1
+endif
+if !exists("g:langIQ_disablehighlight")
+    let g:langIQ_disablehighlight = 0
 endif
 let g:vim_lsp_logdir = expand("<sfile>:h")."/log/"
 let g:vim_lsp_log_to_file = 0
 let g:vim_lsp_debug = 1
+
+let g:completor_python_omni_trigger = '\w{3,}$|
+                                      \[\w\)\]\}\''\"]+\.\w*$|
+                                      \^\s*from\s+[\w\.]*(?:\s+import\s+(?:\w*(?:,\s*)?)*)?|
+                                      \^\s*import\s+(?:[\w\.]*(?:,\s*)?)*'
 sign define LspSign text=>>
 
 " --------------------------------
@@ -67,57 +75,26 @@ endif
 " If we get here the plugin should have loaded correctly
 let g:loaded_vim_lsp = 1
 
-" Start timer to process diagnostics
-let timer = timer_start(1000, "LspProcessDiagnostics", {"repeat": -1})
-
 " --------------------------------
 "  Function(s)
 " --------------------------------
-function! TdDidOpen()
-python << endOfPython
-LSP.td_did_open()
-endOfPython
-endfunction
-
-
-function! TdDidClose()
-python << endOfPython
-LSP.td_did_close()
-endOfPython
-endfunction
-
-
 function! TdDefinition()
 python << endOfPython
-LSP.td_definition()
+LSP.definition()
 endOfPython
 endfunction
 
 
 function! TdReferences()
 python << endOfPython
-LSP.td_references()
+LSP.references()
 endOfPython
 endfunction
 
 
 function! TdSymbols()
 python << endOfPython
-LSP.td_symbols()
-endOfPython
-endfunction
-
-
-function! LspClose()
-python << endOfPython
-LSP.shutdown_all()
-endOfPython
-endfunction
-
-
-function! LspBufWritePost()
-python << endOfPython
-LSP.td_did_save()
+LSP.symbols()
 endOfPython
 endfunction
 
@@ -129,19 +106,11 @@ endOfPython
 endfunction
 
 
-function! LspCursorMoved()
-python << endOfPython
-LSP.display_sign_help()
-endOfPython
-endfunction
-
-
-function! LspProcessDiagnostics(id)
+function! LspProcess(id)
     if LangSupport()
-        py LSP.process_diagnostics()
+        py LSP.process()
     endif
 endfunction
-
 
 function! LspFileType()
 if LangSupport()
@@ -153,27 +122,29 @@ endif
 " TODO: Handle the support check better
 " check again if there is support since the add_client might have failed
 if LangSupport()
+                " Start vim timer for processing messages
+    call timer_start(100, 'LspProcess', {'repeat': -1})
+
     setlocal completeopt=longest,menuone,preview
-    setloca omnifunc=LspOmniFunc
+    setlocal omnifunc=LspOmniFunc
 
     call RegisterCommand()
     call RegisterAutoCmd()
     if g:langIQ_disablekeymap == 0
         call RegisterKeyMap()
     endif
-    call TdDidOpen()
+    py LSP.td_did_open()
 endif
 
 endfunction
 
-
 function! RegisterAutoCmd()
     augroup vim_lsp
         au TextChanged,InsertLeave <buffer> py LSP.td_did_change()
-        au BufUnload <buffer> call TdDidClose()
-        au BufWritePost,FileWritePost <buffer> call LspBufWritePost()
-        au VimLeavePre <buffer> call LspClose()
-        au CursorMoved,CursorMovedI <buffer> call LspCursorMoved()
+        au BufUnload,VimLeavePre <buffer> py LSP.td_did_close()
+        au BufWritePost,FileWritePost <buffer> py LSP.td_did_save()
+        au BufEnter <buffer> py LSP.update_highlight()
+        au CursorMoved,CursorMovedI <buffer> py LSP.display_diagnostics_help()
         " close preview window if visible
         au InsertLeave <buffer> if pumvisible() == 0|pclose|endif
     augroup END
@@ -192,9 +163,7 @@ endOfPython
 endfunction
 
 function! LspOmniFunc(findstart, base)
-python << endOfPython
-LSP.td_completion()
-endOfPython
+    py LSP.omni_func()
 endfunction
 
 
@@ -221,53 +190,12 @@ endfunction
 
 command! LspLog call PrintLog()
 
-" --------------------------------
-"  Key mappings
-" --------------------------------
-function! LspIsComment()
-    let m_col = col(".")
-    let end_col = col("$")
-    " If we are at end of line in insert mode we are out of 'scope'
-    " If we are on the first col we are not
-    if m_col >= end_col && m_col > 1
-        let m_col = end_col - 1
-    endif
-    let highlight = synIDattr(synIDtrans(synID(line("."), m_col, 0)), "name")
-    let syntaxtype = join(map(synstack(line('.'), m_col), 'synIDattr(v:val, "name")'))
-    if highlight =~ 'Comment\|Constant\|PreProc'
-        return 1
-    elseif syntaxtype =~ 'Quote\|String\|Comment'
-        return 1
-    else
-        return 0
-    endif
-endfunction
-
-
-function! LspOmni(noselect)
-    if LspIsComment()
-        return ""
-    elseif pumvisible() && !a:noselect
-        return "\<C-n>"
-    else
-        return "\<C-x>\<C-o>\<C-r>=LspOmniOpened(" . a:noselect . ")\<CR>"
-    endif
-endfunction
-
-
-function! LspOmniOpened(noselect)
-    if !a:noselect && stridx(&completeopt, 'longest') > -1
-        return "\<C-n>"
-    endif
-    return ""
-endfunction
 
 function! RegisterKeyMap()
-    inoremap <silent> <buffer> . .<C-R>=LspOmni(1)<CR>
+    " inoremap <silent> <buffer> . .<C-x><C-o>
     imap <buffer> <Nul> <C-Space>
-    " smap <buffer> <Nul> <C-Space>
-    inoremap <silent> <buffer> <C-Space> <C-R>=LspOmni(0)<CR>
-    " inoremap <expr> <buffer> <C-Space> <C-R>=LspOmni(0)<CR>
+    smap <buffer> <Nul> <C-Space>
+    inoremap <silent> <buffer> <C-Space> <C-x><C-o>
     nnoremap <silent> <buffer> <leader>d :call TdDefinition()<CR>
     nnoremap <silent> <buffer> <leader>f :call TdReferences()<CR>
 endfunction
