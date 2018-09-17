@@ -122,7 +122,12 @@ class JsonRpc(object):
     def _msg_handler(self):
         """Msg handler."""
         while True:
-            msg = json.loads(self._io.recv())
+            try:
+                msg = json.loads(self._io.recv())
+            except Exception as exc:  # pylint: disable=broad-except
+                log.error("Got exception from on when reading. Giving up. Exception: %s", exc)
+                # Returning will end the read thread
+                return
             id_ = msg.get(ID)
             # Requese
             if id_:

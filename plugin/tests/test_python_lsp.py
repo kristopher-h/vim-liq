@@ -37,12 +37,21 @@ VAR_COL = 0
 VAR_REF_LINE = 9
 VAR_REF_COL = 6
 
+
 pyls_dir = "servers/python/pyls"
 f_type = "python"
 f_path = os.path.join(os.path.dirname(__file__), "python_test.py")
 f_content = ""
 with open(f_path) as f:
     f_content = f.read()
+
+
+def wait_for(timeout=5):
+    stoptime = time.time() + timeout
+    while time.time() < stoptime:
+        yield
+        time.sleep(0.1)
+
 
 # Override static vim stuff
 @pytest.fixture(scope="module")
@@ -59,7 +68,7 @@ def LSP(request, vim_static):
     if not os.path.exists(pyls_dir):
         pytest.skip("No python LSP server installed. run tools/create_release --dev")
     else:
-        langserver = {"python": {"cmd": "python " + pyls_dir, "transport": "STDIO"}}
+        langserver = {"python": {"cmd": "python " + pyls_dir + " -v --log-file pyls.log", "transport": "STDIO"}}
 
     log.debug("langserver: %s", langserver)
     client_manager = vimliq.clientmanager.ClientManager(langserver)
@@ -67,8 +76,13 @@ def LSP(request, vim_static):
 
     # Start the newly added server and open our fake file
     client_manager.start_server()
-    time.sleep(1)
-    client_manager.process()
+    for _ in wait_for(8):
+        client_manager.process()
+        if client_manager.initialized:
+            break
+
+    else:
+        raise Exception("Epic failure")
     client_manager.td_did_open()
 
     def fin():
@@ -76,8 +90,6 @@ def LSP(request, vim_static):
         sys.modules["vim"].eval.return_value = f_path
         client_manager.td_did_close()
         client_manager.shutdown_all()
-        time.sleep(1)
-        client_manager.process()
 
     request.addfinalizer(fin)
 
@@ -95,45 +107,69 @@ def test_did_change(LSP):
 def test_definition(LSP, vim_mock):
     vim_mock.current.window.cursor = (FUNC_CALL_LINE, FUNC_CALL_COL)
     LSP.definition()
-    time.sleep(1)
-    LSP.process()
-    # vim_mock.command.assert_called_with("e {}".format(f_path))
-    # assert vim_mock.current.window.cursor == (FUNC_LINE, FUNC_COL)
+    exception = None
+    for _ in wait_for():
+        try:
+            LSP.process()
+            vim_mock.command.assert_called_with("e {}".format(f_path))
+            assert vim_mock.current.window.cursor == (FUNC_LINE, FUNC_COL)
+            break
+        except AssertionError as exc:
+            exception = exc
+    else:
+        raise exception
 
 
 def test_reference(LSP, vim_mock):
     vim_mock.current.window.cursor = (VAR_REF_LINE, VAR_REF_COL)
     LSP.references()
-    time.sleep(1)
-    LSP.process()
-    # print(vim_mock.eval.mock_calls)
-    # vim_mock.eval.assert_called_with(Partial('"filename":"{}"'.format(f_path)))
-    # vim_mock.eval.assert_called_with(Partial('"lnum":{}'.format(VAR_LINE)))
-    # vim_mock.eval.assert_called_with(Partial('"col":{}'.format(VAR_COL)))
+    for _ in wait_for():
+        try:
+            LSP.process()
+            print(vim_mock.eval.mock_calls)
+            vim_mock.eval.assert_called_with(Partial('"filename":"{}"'.format(f_path)))
+            vim_mock.eval.assert_called_with(Partial('"lnum":{}'.format(VAR_LINE)))
+            vim_mock.eval.assert_called_with(Partial('"col":{}'.format(VAR_COL)))
+            break
+        except AssertionError as exc:
+            exception = exc
+    else:
+        raise exception
 
 
 def test_symbols(LSP, vim_mock):
     LSP.symbols()
-    time.sleep(1)
-    LSP.process()
-    # vim_mock.eval.assert_any_call(Partial('"text":"{}'.format("a_variable")))
-    # vim_mock.eval.assert_any_call(Partial('"text":"{}'.format("def a_function():")))
+    for _ in wait_for():
+        try:
+            LSP.process()
+            vim_mock.eval.assert_any_call(Partial('"text":"a_variable"'))
+            vim_mock.eval.assert_any_call(Partial('"text":"a_function"'))
+            break
+        except AssertionError as exc:
+            exception = exc
+    else:
+        raise exception
 
 
-# def test_completion(LSP, vim_mock, monkeypatch):
-#     time.sleep(2)
-#     LSP.process()
-#     vim_mock.current.window.cursor = (VAR_REF_LINE, VAR_REF_COL + 5)
-#     result = LSP.completion()
-#     print(vim_mock.command.mock_calls)
-#     assert '"word":"a_variable"' in result
+def test_completion(LSP, vim_mock, monkeypatch):
+    vim_mock.current.window.cursor = (VAR_REF_LINE, VAR_REF_COL + 5)
+    result = LSP.completion()
+    print(result)
+    print(vim_mock.command.mock_calls)
+    assert '"word":"a_variable"' in result
 
 
 def test_diagnostics(LSP, vim_mock):
     vim_mock.eval.return_value = "fake"
     # For now just check the diagnostics list is updated
-    time.sleep(1)
-    LSP.process()
-    print(LSP.diagnostics)
-    assert LSP.diagnostics[f_path][0]["range"]["start"]["line"] == 9
-    assert LSP.diagnostics[f_path][0]["message"] == "W391 blank line at end of file"
+    for _ in wait_for():
+        try:
+            LSP.process()
+            print(LSP.diagnostics)
+            assert LSP.diagnostics[f_path][0]["range"]["start"]["line"] == 9
+            assert LSP.diagnostics[f_path][0]["message"] == "W391 blank line at end of file"
+            break
+        except AssertionError as exc:
+            exception = exc
+    else:
+        raise exception

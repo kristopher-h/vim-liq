@@ -79,30 +79,22 @@ let g:loaded_vim_lsp = 1
 "  Function(s)
 " --------------------------------
 function! TdDefinition()
-python << endOfPython
-LSP.definition()
-endOfPython
+    py LSP.definition()
 endfunction
 
 
 function! TdReferences()
-python << endOfPython
-LSP.references()
-endOfPython
+    py LSP.references()
 endfunction
 
 
 function! TdSymbols()
-python << endOfPython
-LSP.symbols()
-endOfPython
+    py LSP.symbols()
 endfunction
 
 
 function! TdDiagnostics()
-python << endOfPython
-LSP.display_diagnostics()
-endOfPython
+    py LSP.display_diagnostics()
 endfunction
 
 
@@ -113,35 +105,35 @@ function! LspProcess(id)
 endfunction
 
 function! LspFileType()
-if LangSupport()
-python << endOfPython
-LSP.add_client()
-endOfPython
-endif
-
-" TODO: Handle the support check better
-" check again if there is support since the add_client might have failed
-if LangSupport()
-                " Start vim timer for processing messages
-    call timer_start(100, 'LspProcess', {'repeat': -1})
-
-    setlocal completeopt=longest,menuone,preview
-    setlocal omnifunc=LspOmniFunc
-
-    call RegisterCommand()
-    call RegisterAutoCmd()
-    if g:langIQ_disablekeymap == 0
-        call RegisterKeyMap()
+    if LangSupport()
+        py LSP.add_client()
     endif
-    py LSP.td_did_open()
-endif
 
+    " TODO: Handle the support check better
+    " check again if there is support since the add_client might have failed
+    if LangSupport()
+                    " Start vim timer for processing messages
+        call timer_start(100, 'LspProcess', {'repeat': -1})
+
+        setlocal completeopt=longest,menuone,preview
+        setlocal omnifunc=LspOmniFunc
+
+        call RegisterCommand()
+        call RegisterAutoCmd()
+        if g:langIQ_disablekeymap == 0
+            call RegisterKeyMap()
+        endif
+        py LSP.td_did_open()
+    endif
 endfunction
 
 function! RegisterAutoCmd()
     augroup vim_lsp
+        " Remove all old autocommands. This is needed if opening and closing
+        " the same file multiple times (using :bdel).
+        au! * <buffer>
         au TextChanged,InsertLeave <buffer> py LSP.td_did_change()
-        au BufUnload,VimLeavePre <buffer> py LSP.td_did_close()
+        au BufUnload <buffer> py LSP.td_did_close()
         au BufWritePost,FileWritePost <buffer> py LSP.td_did_save()
         au BufEnter <buffer> py LSP.update_highlight()
         au CursorMoved,CursorMovedI <buffer> py LSP.display_diagnostics_help()
@@ -152,10 +144,7 @@ endfunction
 
 
 function! LangSupport()
-python << endOfPython
-import vim
-vim.command("let langsupport = '{0}'".format(LSP.lang_supported()))
-endOfPython
+    py vim.command("let langsupport = '{0}'".format(LSP.lang_supported()))
     if langsupport == "True"
         return 1
     end
@@ -168,13 +157,11 @@ endfunction
 
 
 function! PrintLog()
-python << endOfPython
-vim.command("echo '{}'".format(LSP_LOG.get_logs()))
-endOfPython
+    py vim.command("echo '{}'".format(LSP_LOG.get_logs()))
 endfunction
 
 " --------------------------------
-"  Register envents
+"  Register events
 " --------------------------------
 au FileType * call LspFileType()
 

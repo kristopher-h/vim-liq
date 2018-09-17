@@ -135,7 +135,9 @@ class LspBase(object):
             LspBaseMessage: If no message is availible return None.
 
         """
-        return self._read()
+        msg = self._read()
+        log.debug("Recv: %s", msg)
+        return msg
 
     def _read(self):
         """Read from stdout."""
@@ -150,12 +152,11 @@ class LspBase(object):
                 except (OSError, IOError) as exc:
                     # This will happen if server dies
                     log.debug("Read from pipe failed. Exception: %s", exc)
-                    # Consider dead. Exit thread.
-                    return
+                    # Consider dead.
+                    raise ServerDead(exc)
 
                 if line == "":
-                    # EOF. Exit thread.
-                    return
+                    raise ServerDead("EOF from server.")
                 elif line == "\r\n":
                     # All headers read. Break header loop.
                     break

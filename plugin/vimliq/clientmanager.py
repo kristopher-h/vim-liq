@@ -32,7 +32,7 @@ def handle_error(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
-            func(*args, **kwargs)
+            return func(*args, **kwargs)
         # Todo be more strict
         # except Exception as exc:
         #     log.debug("Got error from client. message=%s", exc)
