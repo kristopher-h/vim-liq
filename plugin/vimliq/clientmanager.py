@@ -74,8 +74,8 @@ class ClientManager(object):
             try:
                 l_client = client.VimLspClient(start_cmd)
                 l_client.start_server()
-                log.debug("Added client for %s", ft)
                 self.clients[ft] = l_client
+                log.debug("Added client for %s", ft)
 
             # TODO: be more strict
             except (Exception, OSError, IOError) as exc:

@@ -125,7 +125,7 @@ class JsonRpc(object):
             try:
                 msg = json.loads(self._io.recv())
             except Exception as exc:  # pylint: disable=broad-except
-                log.error("Got exception from on when reading. Giving up. Exception: %s", exc)
+                log.error("Got exception from when reading. Giving up. Exception: %s", exc)
                 # Returning will end the read thread
                 return
             id_ = msg.get(ID)
@@ -151,7 +151,7 @@ class JsonRpc(object):
                 try:
                     self._notification_map[method](msg[PARAMS], None)
                 except KeyError:
-                    log.info("Unsupprted notification received. msg=%s", msg)
+                    log.info("Unsupported notification received. msg=%s", msg)
 
     # Private functions
     def _get_id(self):

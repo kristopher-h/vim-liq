@@ -61,7 +61,7 @@ class VimLspClient(object):
         self._sign_id = 1
         self.diagnostics = {}
         self.completions = "[]"
-        self.initialized = False
+        self.isinitialized = False
         self._proc_id = os.getpid()
         self.rpc = None
         self.io = None
@@ -102,7 +102,7 @@ class VimLspClient(object):
         self.rpc.call_async(P.M_INITIALIZE, params, callback=self._handler(self.handle_initialize))
 
     def completion(self):
-        if not self.initialized:
+        if not self.isinitialized:
             return {}
         row, col = V.cursor()
         params = {
@@ -128,7 +128,7 @@ class VimLspClient(object):
         self.rpc.call_async(P.M_INITIALIZED, {}, notify=True)
 
     def references(self):
-        if not self.initialized:
+        if not self.isinitialized:
             return
         row, col = V.cursor()
         params = {
@@ -147,7 +147,7 @@ class VimLspClient(object):
             P.M_TD_REFERENCES, params, callback=self._handler(self.handle_references))
 
     def definition(self):
-        if not self.initialized:
+        if not self.isinitialized:
             return
         row, col = V.cursor()
         params = {
@@ -166,7 +166,7 @@ class VimLspClient(object):
             P.M_TD_DEFINITION, params, callback=self._handler(self.handle_definition))
 
     def symbols(self):
-        if not self.initialized:
+        if not self.isinitialized:
             return
         row, col = V.cursor()
         params = {
@@ -178,7 +178,7 @@ class VimLspClient(object):
             P.M_TD_SYMBOLS, params, callback=self._handler(self.handle_symbols))
 
     def td_did_open(self):
-        if not self.initialized:
+        if not self.isinitialized:
             return
         self.td_version += 1
         params = {
@@ -192,7 +192,7 @@ class VimLspClient(object):
         self.rpc.call_async(P.M_TD_DID_OPEN, params, notify=True)
 
     def td_did_save(self):
-        if not self.initialized:
+        if not self.isinitialized:
             return
         params = {
             P.K_TD: {
@@ -202,7 +202,7 @@ class VimLspClient(object):
         self.rpc.call_async(P.M_TD_DID_SAVE, params, notify=True)
 
     def td_did_close(self):
-        if not self.initialized:
+        if not self.isinitialized:
             return
         params = {
             P.K_TD: {
@@ -212,7 +212,7 @@ class VimLspClient(object):
         self.rpc.call_async(P.M_TD_DID_CLOSE, params, notify=True)
 
     def td_did_change(self):
-        if not self.initialized:
+        if not self.isinitialized:
             return
         self.td_version += 1
         params = {
@@ -234,7 +234,7 @@ class VimLspClient(object):
     def handle_initialize(self, msg):
         """Handle initialize response."""
         log.debug("Initialized.")
-        self.initialized = True
+        self.isinitialized = True
         # self.initialized()
         # TODO: Loop through all open files? And not only current?
         self.td_did_open()

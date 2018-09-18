@@ -20,6 +20,7 @@ This module contains an implementation of the base protocol for the language ser
 
 It implements a client with the possibility to write and read over stdout/stdin.
 """
+import collections
 import logging
 import os
 import subprocess
@@ -42,10 +43,12 @@ class StdIO(object):
         self._start_cmd = start_cmd
         self._reader = None
         self._writer = None
+        self._server = None
 
     def connect(self):
         """Connect to remote."""
         self._devnull = open(os.devnull, "w")
+        # TODO: Add possibility to capture stderr or pipe to memlogger directly?
         self._server = subprocess.Popen(self._start_cmd, stdin=subprocess.PIPE,
                                         stdout=subprocess.PIPE, stderr=self._devnull)
         self._reader = self._server.stdout
@@ -89,10 +92,10 @@ class LspBaseMsg(object):
         if headers:
             self.headers = headers
         else:
-            self.headers = {
-                "Content-Length": len(body),
-                "Content-Type": "application/vscode-jsonrpc; charset=utf-8"
-            }
+            self.headers = collections.OrderedDict([
+                ("Content-Length", len(body)),
+                ("Content-Type", "application/vscode-jsonrpc; charset=utf-8"),
+            ])
 
     def to_bytes(self):
         """Serialize message to bytes."""
@@ -154,6 +157,8 @@ class LspBase(object):
                     log.debug("Read from pipe failed. Exception: %s", exc)
                     # Consider dead.
                     raise ServerDead(exc)
+
+                log.debug("readline: %s", line)
 
                 if line == "":
                     raise ServerDead("EOF from server.")

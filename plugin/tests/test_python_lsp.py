@@ -74,13 +74,11 @@ def LSP(request, vim_static):
     client_manager = vimliq.clientmanager.ClientManager(langserver)
     client_manager.add_client()
 
-    # Start the newly added server and open our fake file
-    client_manager.start_server()
     for _ in wait_for(8):
         client_manager.process()
-        if client_manager.initialized:
+        if client_manager.isinitialized:
+            print("Initialized")
             break
-
     else:
         raise Exception("Epic failure")
     client_manager.td_did_open()
@@ -162,14 +160,14 @@ def test_completion(LSP, vim_mock, monkeypatch):
 def test_diagnostics(LSP, vim_mock):
     vim_mock.eval.return_value = "fake"
     # For now just check the diagnostics list is updated
-    for _ in wait_for():
+    for _ in wait_for(10):
         try:
             LSP.process()
             print(LSP.diagnostics)
             assert LSP.diagnostics[f_path][0]["range"]["start"]["line"] == 9
             assert LSP.diagnostics[f_path][0]["message"] == "W391 blank line at end of file"
             break
-        except AssertionError as exc:
+        except (KeyError, AssertionError) as exc:
             exception = exc
     else:
         raise exception
