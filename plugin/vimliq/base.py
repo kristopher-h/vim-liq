@@ -93,8 +93,8 @@ class LspBaseMsg(object):
             self.headers = headers
         else:
             self.headers = collections.OrderedDict([
-                ("Content-Length", len(body)),
                 ("Content-Type", "application/vscode-jsonrpc; charset=utf-8"),
+                ("Content-Length", len(body)),
             ])
 
     def to_bytes(self):

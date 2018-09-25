@@ -201,12 +201,14 @@ class VimLspClient(object):
         }
         self.rpc.call_async(P.M_TD_DID_SAVE, params, notify=True)
 
-    def td_did_close(self):
+    def td_did_close(self, filename=None):
         if not self.isinitialized:
             return
+
+        filename = filename or V.current_file()
         params = {
             P.K_TD: {
-                P.K_URI: "file://" + V.current_file(),
+                P.K_URI: "file://" + filename,
             }
         }
         self.rpc.call_async(P.M_TD_DID_CLOSE, params, notify=True)

@@ -127,13 +127,23 @@ function! LspFileType()
     endif
 endfunction
 
+function! LangIQ_closefile(buf, filename)
+let l:filetype = getbufvar(a:buf + 0, "&filetype")
+python << endOfPython
+try:
+    LSP.getclient(vim.eval("l:filetype")).td_did_close(vim.eval("a:filename"))
+except KeyError:
+    pass
+endOfPython
+endfunction
+
 function! RegisterAutoCmd()
     augroup vim_lsp
         " Remove all old autocommands. This is needed if opening and closing
         " the same file multiple times (using :bdel).
         au! * <buffer>
         au TextChanged,InsertLeave <buffer> py LSP.td_did_change()
-        au BufUnload <buffer> py LSP.td_did_close()
+        au BufUnload <buffer> call LangIQ_closefile(expand("<abuf>"), expand("<afile>"))
         au BufWritePost,FileWritePost <buffer> py LSP.td_did_save()
         au BufEnter <buffer> py LSP.update_highlight()
         au CursorMoved,CursorMovedI <buffer> py LSP.display_diagnostics_help()
@@ -160,10 +170,18 @@ function! PrintLog()
     py vim.command("echo '{}'".format(LSP_LOG.get_logs()))
 endfunction
 
+function! ClearHighlight()
+    " Always clear highlight for window
+    if !LangSupport() && exists("w:langiq_match") && w:langiq_match > -1
+        silent call matchdelete(w:langiq_match)
+    endif
+endfunction
+
 " --------------------------------
 "  Register events
 " --------------------------------
 au FileType * call LspFileType()
+au BufEnter * call ClearHighlight()
 
 " --------------------------------
 "  Expose our commands to the user

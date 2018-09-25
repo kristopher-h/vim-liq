@@ -90,6 +90,9 @@ class ClientManager(object):
             log.debug("Shutdown client for language, %s", lang)
             l_client.shutdown()
 
+    def getclient(self, filetype):
+        return self.clients[filetype]
+
     def __getattr__(self, name):
         """Forward function call to the correct lsp client."""
         filetype = V.filetype()
