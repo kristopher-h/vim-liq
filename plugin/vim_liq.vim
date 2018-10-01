@@ -145,7 +145,7 @@ function! RegisterAutoCmd()
         au TextChanged,InsertLeave <buffer> py LSP.td_did_change()
         au BufUnload <buffer> call LangIQ_closefile(expand("<abuf>"), expand("<afile>"))
         au BufWritePost,FileWritePost <buffer> py LSP.td_did_save()
-        au BufEnter <buffer> py LSP.update_highlight()
+        au BufWinEnter,WinEnter <buffer> py LSP.update_highlight()
         au CursorMoved,CursorMovedI <buffer> py LSP.display_diagnostics_help()
         " close preview window if visible
         au InsertLeave <buffer> if pumvisible() == 0|pclose|endif
@@ -173,7 +173,7 @@ endfunction
 function! ClearHighlight()
     " Always clear highlight for window
     if !LangSupport() && exists("w:langiq_match") && w:langiq_match > -1
-        silent call matchdelete(w:langiq_match)
+        silent! call matchdelete(w:langiq_match)
     endif
 endfunction
 
@@ -181,7 +181,7 @@ endfunction
 "  Register events
 " --------------------------------
 au FileType * call LspFileType()
-au BufEnter * call ClearHighlight()
+au BufWinEnter,WinEnter * call ClearHighlight()
 
 " --------------------------------
 "  Expose our commands to the user

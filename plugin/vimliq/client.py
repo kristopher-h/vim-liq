@@ -26,6 +26,7 @@ try:
 except ImportError:
     import queue
 
+
 import vimliq.base as base
 import vimliq.jsonrpc as jsonrpc
 import vimliq.lsp as P
@@ -344,10 +345,13 @@ class VimLspClient(object):
             file_ = V.current_file()
         log.debug("Update highlight for %s", file_)
 
-        try:
-            vim.command("call matchdelete(w:langiq_match)")
-        except vim.error:
-            pass
+        update_win = []
+        for win in vim.windows:
+            if win.buffer.name == file_:
+                update_win.append(win.number)
+
+        if not update_win:
+            return
 
         match_regex = []
         for diag in self.diagnostics.get(file_, []):
@@ -363,13 +367,28 @@ class VimLspClient(object):
 
         cmd = r"let w:langiq_match=matchadd('ColorColumn', '{}')".format(r"\|".join(match_regex))
         log.debug("Highlight cmd: %s", cmd)
-        vim.command(cmd)
+        orig_win = vim.current.window.number
+
+        for win in update_win:
+            vim.command("exe {} 'wincmd w'".format(win))
+            try:
+                vim.command("call matchdelete(w:langiq_match)")
+            except vim.error as exc:
+                log.debug("Got error %s", exc)
+            try:
+                log.debug("Updating highlight for window %s", win)
+                vim.command(cmd)
+            except vim.error as exc:
+                log.debug("Got error %s", exc)
+
+        vim.command("exe {} 'wincmd w'".format(orig_win))
 
     def omni_func(self):
         """Blocking omnifunc."""
         if vim.eval("a:findstart") == "1":
             vim.command("return syntaxcomplete#Complete(1, '')")
             return
+        # Call did change to make sure server has latest info
         self.td_did_change()
         completions = self.completion()
         vim.command("return {}".format(completions))

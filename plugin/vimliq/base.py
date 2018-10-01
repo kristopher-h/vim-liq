@@ -123,12 +123,12 @@ class LspBase(object):
         msg = LspBaseMsg(body)
         try:
             raw = msg.to_bytes()
-            log.debug("Send: %s", raw)
+            log.log(5, "Send: %s", raw)
             self._io.write(raw)
             self._io.flush()
         except (OSError, IOError) as exc:
             # This will happen if server dies
-            log.debug("Write to pipe failed. Exception: %s", exc)
+            log.error("Write to pipe failed. Exception: %s", exc)
             raise ServerDead(exc)
 
     def recv(self):
@@ -139,7 +139,7 @@ class LspBase(object):
 
         """
         msg = self._read()
-        log.debug("Recv: %s", msg)
+        log.log(5, "Recv: %s", msg)
         return msg
 
     def _read(self):
@@ -154,11 +154,11 @@ class LspBase(object):
                     line = self._io.readline().decode("ascii")
                 except (OSError, IOError) as exc:
                     # This will happen if server dies
-                    log.debug("Read from pipe failed. Exception: %s", exc)
+                    log.error("Read from pipe failed. Exception: %s", exc)
                     # Consider dead.
                     raise ServerDead(exc)
 
-                log.debug("readline: %s", line)
+                log.log(5, "readline: %s", line)
 
                 if line == "":
                     raise ServerDead("EOF from server.")
