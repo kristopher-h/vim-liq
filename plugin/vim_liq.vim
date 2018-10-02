@@ -59,7 +59,6 @@ import os
 import sys
 import vim
 sys.path.append(vim.eval('expand("<sfile>:h")'))
-sys.path.append(os.path.join(vim.eval('expand("<sfile>:h")'), "vendor/lsp"))
 from vim_liq import LSP
 lspLoaded = 0
 if LSP:
@@ -71,6 +70,12 @@ endOfPython
 if lspLoaded == 0
     finish
 endif
+
+" Start vim timer for processing messages. This is only
+" done once since we are anyway only working with one
+" buffer at the time. It might be needed to run once per
+" langserver in the future.
+call timer_start(100, 'LspProcess', {'repeat': -1})
 
 " If we get here the plugin should have loaded correctly
 let g:loaded_vim_lsp = 1
@@ -112,8 +117,6 @@ function! LspFileType()
     " TODO: Handle the support check better
     " check again if there is support since the add_client might have failed
     if LangSupport()
-                    " Start vim timer for processing messages
-        call timer_start(100, 'LspProcess', {'repeat': -1})
 
         setlocal completeopt=longest,menuone,preview
         setlocal omnifunc=LspOmniFunc
