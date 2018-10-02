@@ -93,8 +93,8 @@ class LspBaseMsg(object):
             self.headers = headers
         else:
             self.headers = collections.OrderedDict([
-                ("Content-Type", "application/vscode-jsonrpc; charset=utf-8"),
                 ("Content-Length", len(body)),
+                ("Content-Type", "application/vscode-jsonrpc; charset=utf-8"),
             ])
 
     def to_bytes(self):
@@ -157,8 +157,6 @@ class LspBase(object):
                     log.error("Read from pipe failed. Exception: %s", exc)
                     # Consider dead.
                     raise ServerDead(exc)
-
-                log.log(5, "readline: %s", line)
 
                 if line == "":
                     raise ServerDead("EOF from server.")
